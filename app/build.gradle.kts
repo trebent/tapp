@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.github.trebent.tapp"
-    compileSdk = 36
+    compileSdk = 36 // 16
 
     defaultConfig {
         applicationId = "com.github.trebent.tapp"
-        minSdk = 25
-        targetSdk = 36
+        minSdk = 25 // 7.1
+        targetSdk = 36 // 16
         versionCode = 1
         versionName = "1.0"
 
@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
