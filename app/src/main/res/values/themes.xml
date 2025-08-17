@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Tapp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Tapp.Starting" parent="Theme.SplashScreen">
+        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
 </resources>
