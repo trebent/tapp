@@ -21,14 +21,16 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         val splash = installSplashScreen()
         var i: Int = 0
         splash.setKeepOnScreenCondition {
             i++
             keepSplash(i)
         }
+
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
         setContent {
             TappTheme {
                 Scaffold(
@@ -51,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
 fun keepSplash(i: Int): Boolean {
     println("keep int is now $i")
-    return i != 100
+    return i != 20
 }
 
 @Composable

@@ -2,8 +2,9 @@
 <resources>
 
     <style name="Theme.Tapp.Starting" parent="Theme.SplashScreen">
-        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="windowSplashScreenBackground">@color/windowBackground</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="android:icon">@mipmap/ic_launcher</item>
 
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
