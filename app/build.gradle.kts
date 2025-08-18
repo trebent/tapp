@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,10 +22,10 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("boolean", "TEST_MODE", "true")
+            buildConfigField("boolean", "TAPP_TEST_MODE", "true")
         }
         release {
-            buildConfigField("boolean", "TEST_MODE", "false")
+            buildConfigField("boolean", "TAPP_TEST_MODE", "false")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -37,13 +39,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.fromTarget("11")
     }
 }
 
