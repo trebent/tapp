@@ -8,11 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -49,11 +46,6 @@ fun Main(authViewModel: AuthViewModel = viewModel()) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(title = {
-                Text(text = stringResource(id = R.string.app_name))
-            })
-        },
     ) { padding ->
         NavHost(
             navController = navController,
@@ -63,7 +55,16 @@ fun Main(authViewModel: AuthViewModel = viewModel()) {
                 .padding(horizontal = 16.dp)
         ) {
             composable("home") { HomeScreenRoute(authViewModel) { navController.navigate("login") } }
-            composable("login") { LoginScreenRoute(authViewModel) { navController.navigate("home") } }
+            composable("login") {
+                LoginScreenRoute(
+                    authViewModel,
+                    { navController.navigate("signup") }) { navController.navigate("home") }
+            }
+            composable("signup") {
+                SignupScreenRoute(
+                    authViewModel,
+                    { navController.navigate("login") }) { navController.navigate("login") }
+            }
         }
     }
 }

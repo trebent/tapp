@@ -14,11 +14,15 @@ class AuthViewModel(var loginState: Boolean = false) : ViewModel() {
         return loginState
     }
 
-    fun login(username: String, password: String): Boolean {
-        if (BuildConfig.TAPP_TEST_MODE && username == testUsername && password == testPassword) {
+    fun signup(tag: String, email: String, password: String): Boolean {
+        return true
+    }
+
+    fun login(email: String, password: String): Boolean {
+        if (BuildConfig.TAPP_TEST_MODE && email == testUsername && password == testPassword) {
             loginState = true
         }
-        
+
         return loginState
     }
 

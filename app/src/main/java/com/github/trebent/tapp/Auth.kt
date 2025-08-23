@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -33,13 +34,18 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun LoginScreenRoute(authViewModel: AuthViewModel, onLogin: () -> Unit) {
-    LoginScreen({ u, p -> authViewModel.login(u, p) }, onLogin)
+fun SignupScreenRoute(authViewModel: AuthViewModel, onCancel: () -> Unit, onSignedUp: () -> Unit) {
+    SignupScreen({ t, e, p -> authViewModel.signup(t, e, p) }, onCancel, onSignedUp)
 }
 
 @Composable
-fun LoginScreen(loginFun: (String, String) -> Boolean, onLogin: () -> Unit) {
-    var username by remember { mutableStateOf("") }
+fun SignupScreen(
+    onSignup: (t: String, e: String, p: String) -> Boolean,
+    onCancel: () -> Unit,
+    onSignedUp: () -> Unit
+) {
+    var tag by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
@@ -51,9 +57,9 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onLogin: () -> Unit) {
         ) {
             item(span = { GridItemSpan(4) }) {
                 TextField(
-                    value = username,
-                    label = { Text("Username") },
-                    placeholder = { Text("Enter username") },
+                    value = tag,
+                    label = { Text("Tag") },
+                    placeholder = { Text("Enter Tag") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -61,8 +67,127 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onLogin: () -> Unit) {
                         )
                     },
                     onValueChange = { v: String ->
-                        username = v
-                        Log.i("LoginScreen", "entered text in username field: $username")
+                        tag = v
+                        Log.i("LoginScreen", "entered text in tag field: $tag")
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            item(span = { GridItemSpan(4) }) {
+                TextField(
+                    value = email,
+                    label = { Text("Email") },
+                    placeholder = { Text("Enter email") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "",
+                        )
+                    },
+                    onValueChange = { v: String ->
+                        email = v
+                        Log.i("LoginScreen", "entered text in email field: $email")
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            item(span = { GridItemSpan(4) }) {
+                TextField(
+                    value = password,
+                    label = { Text("Password") },
+                    placeholder = { Text("Enter password") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "",
+                        )
+                    },
+                    onValueChange = { v: String ->
+                        password = v
+                        // Don't emit the actual password, but make sure to report the string size
+                        // for easy debugging.
+                        Log.i(
+                            "LoginScreen",
+                            "entered text in password field ${password.length} characters long"
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    ),
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            item(span = { GridItemSpan(4) }) {
+                Button(onClick = {
+                    Log.i("SignupScreen", "clicked signup button")
+                    if (onSignup(tag, email, password)) {
+                        onSignedUp()
+                    } else {
+                        Log.e("SignupScreen", "signup failed")
+                    }
+                }) {
+                    Text("Sign up")
+                }
+            }
+            item(span = { GridItemSpan(4) }) {
+                Button(onClick = {
+                    Log.i("SignupScreen", "clicked cancel button")
+                    onCancel()
+                }) {
+                    Text("Cancel")
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun SignupScreenPreview() {
+    SignupScreen({ t, e, p -> true }, {}, {})
+}
+
+@Composable
+fun LoginScreenRoute(authViewModel: AuthViewModel, onSignup: () -> Unit, onLogin: () -> Unit) {
+    LoginScreen({ u, p -> authViewModel.login(u, p) }, onSignup, onLogin)
+}
+
+@Composable
+fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onLogin: () -> Unit) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            item(span = { GridItemSpan(4) }) {
+                TextField(
+                    value = email,
+                    label = { Text("Email") },
+                    placeholder = { Text("Enter email") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "",
+                        )
+                    },
+                    onValueChange = { v: String ->
+                        email = v
+                        Log.i("LoginScreen", "entered text in email field: $email")
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(
@@ -102,13 +227,21 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onLogin: () -> Unit) {
             item(span = { GridItemSpan(4) }) {
                 Button(onClick = {
                     Log.i("LoginScreen", "clicked login button")
-                    if (loginFun(username, password)) {
+                    if (loginFun(email, password)) {
                         onLogin()
                     } else {
                         Log.e("LoginScreen", "login failed")
                     }
                 }) {
                     Text("Log in")
+                }
+            }
+            item(span = { GridItemSpan(4) }) {
+                Button(onClick = {
+                    Log.i("LoginScreen", "clicked sign up button")
+                    onSignup()
+                }) {
+                    Text("Sign up")
                 }
             }
         }
@@ -118,5 +251,5 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onLogin: () -> Unit) {
 @Preview
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen({ u, p -> true }, {})
+    LoginScreen({ u, p -> true }, {}, {})
 }
