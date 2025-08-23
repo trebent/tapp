@@ -90,6 +90,7 @@ func main() {
 	defer shutdownCancel()
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		zerologr.Error(err, "server shutdown failed")
+		//nolint:gocritic // I know.
 		os.Exit(1)
 	}
 }
