@@ -24,7 +24,7 @@ jobs:
       # to determine if the cache is valid. This is not ideal since the go.sum
       # file is updated every time a new version of a dependency is downloaded.
       # Not when your code changes.
-      - name: Set up Golang ${{ matrix.go-version-alias }}
+      - name: Set up Golang
         uses: actions/setup-go@v5
         with:
           go-version-file: ./cloud/go.mod
