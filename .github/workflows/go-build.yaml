@@ -45,9 +45,10 @@ jobs:
           key: go-build-${{ github.sha }}
           restore-keys: go-build-
       - name: Lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.0
+          working-directory: ./cloud
+          version: latest
       - name: Install dependencies
         run: go mod download
       - name: Run tests
