@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SignupScreenRoute(authViewModel: AuthViewModel, onCancel: () -> Unit, onSignedUp: () -> Unit) {
+    Log.i("Home", "signup route")
+
     SignupScreen({ t, e, p -> authViewModel.signup(t, e, p) }, onCancel, onSignedUp)
 }
 
@@ -44,6 +46,8 @@ fun SignupScreen(
     onCancel: () -> Unit,
     onSignedUp: () -> Unit
 ) {
+    Log.i("Home", "rending SignupScreen")
+
     var tag by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -159,11 +163,15 @@ fun SignupScreenPreview() {
 
 @Composable
 fun LoginScreenRoute(authViewModel: AuthViewModel, onSignup: () -> Unit, onLogin: () -> Unit) {
+    Log.i("Home", "login route")
+
     LoginScreen({ u, p -> authViewModel.login(u, p) }, onSignup, onLogin)
 }
 
 @Composable
 fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onLogin: () -> Unit) {
+    Log.i("Home", "rending LoginScreen")
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
