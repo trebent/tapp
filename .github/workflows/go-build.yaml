@@ -18,11 +18,6 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # these aliases make sure to test both latest and previous minor 
-        # versions.
-        go-version-alias: ["stable", "oldstable"]
     steps:
       - uses: actions/checkout@v4
       # Disable the builtin caching since it uses the hash of the go.sum file
@@ -32,7 +27,7 @@ jobs:
       - name: Set up Golang ${{ matrix.go-version-alias }}
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version-alias }}
+          go-version-file: ./cloud/go.mod
           cache: false
       # Use restore-keys to always use a cache that was created with the same
       # prefix.
@@ -54,11 +49,11 @@ jobs:
       - name: Run tests
         run: go test ./... -coverprofile=coverage.out
       - name: Generate coverage report
-        run: go tool cover -html=coverage.out -o coverage.html
+        run: go tool cover -html=coverage.out -o ./coverage.html
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: go-coverage-report-${{ matrix.go-version-alias }}
-          path: coverage.html
+          path: ./cloud/coverage.html
       - name: Build
         run: go build -o cloud ./
