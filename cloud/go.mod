@@ -1,6 +1,6 @@
 module github.com/trebent/tapp-backend
 
-go 1.24.3
+go 1.24.6
 
 require (
 	github.com/trebent/envparser v1.0.5
