@@ -17,9 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavDirections
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.github.trebent.tapp.ui.theme.TappTheme
 
 
@@ -52,6 +56,8 @@ fun Main(authViewModel: AuthViewModel, groupViewModel: GroupViewModel) {
 
     val isLoggedIn = authViewModel.isLoggedIn()
 
+    val goBack: () -> Unit = { navController.popBackStack() }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
@@ -64,13 +70,36 @@ fun Main(authViewModel: AuthViewModel, groupViewModel: GroupViewModel) {
         ) {
             composable("splash") { SplashScreen() }
             composable("home") {
-                HomeScreenRoute(authViewModel, groupViewModel) { navController.navigate("login") }
+                HomeScreenRoute(
+                    authViewModel,
+                    groupViewModel,
+                    { tg -> navController.navigate(tg) },
+                    { navController.navigate("login") })
+            }
+            composable<TappGroup> { bse ->
+                val lookupTappGroup: TappGroup = bse.toRoute()
+
+                if (lookupTappGroup.edit) {
+                    EditTappGroupScreenRoute(
+                        groupViewModel,
+                        lookupTappGroup.id,
+                        goBack,
+                    )
+                } else {
+                    TappGroupScreenRoute(
+                        groupViewModel,
+                        lookupTappGroup,
+                        { tg -> navController.navigate(tg) },
+                        goBack,
+                    )
+                }
             }
             composable("login") {
                 LoginScreenRoute(
                     authViewModel,
-                    { navController.navigate("signup") }
-                ) { navController.navigate("home") }
+                    { navController.navigate("signup") },
+                    { navController.navigate("home") }
+                )
             }
             composable("signup") {
                 SignupScreenRoute(

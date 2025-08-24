@@ -1,15 +1,36 @@
 package com.github.trebent.tapp
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
 import kotlin.collections.listOf
 
 
-data class TappGroup(val name: String)
+@Serializable
+data class TappGroup(
+    val id: Int,
+    val name: String,
+    val description: String,
+    var edit: Boolean
+)
 
+val newTappGroup = TappGroup(0, "", "", true)
+val testGroup = TappGroup(12, "group name", "group description", false)
+
+val testGroups = listOf(
+    TappGroup(1, "group1", "some words", false),
+    TappGroup(2, "group2", "some words", false),
+    TappGroup(3, "group3", "some words", false),
+    TappGroup(4, "group4", "some words", false),
+    TappGroup(5, "group5", "some words", false),
+    TappGroup(6, "group6", "some words", false),
+    TappGroup(7, "group7", "some words",  false),
+    TappGroup(8, "group8", "some words",  false),
+    TappGroup(9, "group9", "some words", false),
+    TappGroup(10, "group10", "some words", false),
+)
 
 class GroupViewModel() : ViewModel() {
     private val _groups = MutableStateFlow<List<TappGroup>>(emptyList())
@@ -23,23 +44,20 @@ class GroupViewModel() : ViewModel() {
         Log.i("GroupViewModel", "initialising the auth view model")
         // TODO: remove hardcoded sleep
         Thread.sleep(200)
-        _groups.value = listOf(
-            TappGroup("group1"),
-            TappGroup("group2"),
-            TappGroup("group3"),
-            TappGroup("group4"),
-            TappGroup("group5"),
-            TappGroup("group6"),
-            TappGroup("group7"),
-            TappGroup("group8"),
-            TappGroup("group9"),
-            TappGroup("group10"),
-        )
+        _groups.value = testGroups
         // TODO: add cloud fetch
         _i.value = true
     }
 
-    fun createGroup(newTappGroup: TappGroup) {
+    fun get(id: Int): TappGroup {
+        var tg = _groups.value.find { tg -> tg.id == id }
+        if (tg == null) {
+            tg = newTappGroup
+        }
+        return tg
+    }
+
+    fun create(newTappGroup: TappGroup) {
         Log.i("GroupVewiModel", "adding group ${newTappGroup.name}")
         _groups.value = _groups.value + newTappGroup
     }
