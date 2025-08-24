@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -26,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -78,13 +82,20 @@ fun SignupScreen(
                     keyboardActions = KeyboardActions(
                         onNext = { focusManager.moveFocus(FocusDirection.Down) }
                     ),
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            item(span = { GridItemSpan(4) }) {
+                Text(
+                    text = "an optional user handle that your friends can find you by",
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
             item(span = { GridItemSpan(4) }) {
                 TextField(
                     value = email,
-                    label = { Text("Email") },
+                    label = { Text("* Email") },
                     placeholder = { Text("Enter email") },
                     leadingIcon = {
                         Icon(
@@ -106,7 +117,7 @@ fun SignupScreen(
             item(span = { GridItemSpan(4) }) {
                 TextField(
                     value = password,
-                    label = { Text("Password") },
+                    label = { Text("* Password") },
                     placeholder = { Text("Enter password") },
                     leadingIcon = {
                         Icon(
@@ -128,11 +139,18 @@ fun SignupScreen(
                         onDone = { focusManager.clearFocus() }
                     ),
                     visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            item(span = { GridItemSpan(4) }) {
+                Text(
+                    text = "fields marked with * are required",
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
             item(span = { GridItemSpan(4) }) {
-                Button(onClick = {
+                Button(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("SignupScreen", "clicked signup button")
                     if (onSignup(tag, email, password)) {
                         onSignedUp()
@@ -144,11 +162,11 @@ fun SignupScreen(
                 }
             }
             item(span = { GridItemSpan(4) }) {
-                Button(onClick = {
+                OutlinedButton(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("SignupScreen", "clicked cancel button")
                     onCancel()
                 }) {
-                    Text("Cancel")
+                    Text("Cancel", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
@@ -233,7 +251,7 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                 )
             }
             item(span = { GridItemSpan(4) }) {
-                Button(onClick = {
+                Button(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("LoginScreen", "clicked login button")
                     if (loginFun(email, password)) {
                         onLogin()
@@ -245,11 +263,11 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                 }
             }
             item(span = { GridItemSpan(4) }) {
-                Button(onClick = {
+                OutlinedButton(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("LoginScreen", "clicked sign up button")
                     onSignup()
                 }) {
-                    Text("Sign up")
+                    Text("Sign up", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }

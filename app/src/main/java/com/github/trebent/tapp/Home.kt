@@ -30,7 +30,6 @@ fun HomeScreen(logout: () -> Unit, onLogout: () -> Unit) {
             verticalArrangement = Arrangement.Bottom,
             horizontalArrangement = Arrangement.Center
         ) {
-
         }
     }
 }
