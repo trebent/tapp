@@ -26,26 +26,27 @@ import com.github.trebent.tapp.ui.theme.TappTheme
 class MainActivity : ComponentActivity() {
 
     private val authViewModel: AuthViewModel by viewModels()
+    private val groupViewModel: GroupViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Keep the splash as long as the auth view model needs to do its cloud sync.
         val splash = installSplashScreen()
         splash.setKeepOnScreenCondition {
-            !authViewModel.initialised.value
+            !authViewModel.initialised.value && !groupViewModel.initialised.value
         }
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
-            TappTheme { Main(authViewModel) }
+            TappTheme { Main(authViewModel, groupViewModel) }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Main(authViewModel: AuthViewModel) {
+fun Main(authViewModel: AuthViewModel, groupViewModel: GroupViewModel) {
     Log.i("Main", "main compose entrypoint")
     val navController = rememberNavController()
 
@@ -62,7 +63,9 @@ fun Main(authViewModel: AuthViewModel) {
                 .padding(horizontal = 16.dp)
         ) {
             composable("splash") { SplashScreen() }
-            composable("home") { HomeScreenRoute(authViewModel) { navController.navigate("login") } }
+            composable("home") {
+                HomeScreenRoute(authViewModel, groupViewModel) { navController.navigate("login") }
+            }
             composable("login") {
                 LoginScreenRoute(
                     authViewModel,

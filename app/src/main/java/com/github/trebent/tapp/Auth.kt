@@ -366,7 +366,7 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                     Log.i("LoginScreen", "clicked sign up button")
                     onSignup()
                 }) {
-                    Text("Sign up", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text("Sign up")
                 }
             }
         }
