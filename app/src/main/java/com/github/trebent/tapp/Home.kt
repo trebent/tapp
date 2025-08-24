@@ -21,7 +21,7 @@ fun HomeScreenRoute(authViewModel: AuthViewModel, onLogout: () -> Unit) {
 
 @Composable
 fun HomeScreen(logout: () -> Unit, onLogout: () -> Unit) {
-    Log.i("Home", "rending HomeScreen")
+    Log.i("Home", "rendering HomeScreen")
 
     Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
         LazyVerticalGrid(

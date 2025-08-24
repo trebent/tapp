@@ -29,12 +29,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.stylusHoverIcon
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+
+
+val emailRegex = Regex.fromLiteral("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
 
 
 @Composable
@@ -57,6 +62,10 @@ fun SignupScreen(
     var password by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
+    var tagError by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
+
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
@@ -67,13 +76,14 @@ fun SignupScreen(
                 TextField(
                     value = tag,
                     label = { Text("Tag") },
-                    placeholder = { Text("Enter Tag") },
+                    placeholder = { Text("Enter tag") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "",
                         )
                     },
+                    isError = tagError,
                     onValueChange = { v: String ->
                         tag = v
                         Log.i("LoginScreen", "entered text in tag field: $tag")
@@ -85,10 +95,20 @@ fun SignupScreen(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
+            if (tagError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "tag is already taken",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
             item(span = { GridItemSpan(4) }) {
                 Text(
                     text = "an optional user handle that your friends can find you by",
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
@@ -103,6 +123,7 @@ fun SignupScreen(
                             contentDescription = "",
                         )
                     },
+                    isError = emailError,
                     onValueChange = { v: String ->
                         email = v
                         Log.i("LoginScreen", "entered text in email field: $email")
@@ -113,6 +134,16 @@ fun SignupScreen(
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+            }
+            if (emailError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "email address is required, example: person@domain.se",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
             }
             item(span = { GridItemSpan(4) }) {
                 TextField(
@@ -125,6 +156,7 @@ fun SignupScreen(
                             contentDescription = "",
                         )
                     },
+                    isError = passwordError,
                     onValueChange = { v: String ->
                         password = v
                         // Don't emit the actual password, but make sure to report the string size
@@ -142,20 +174,39 @@ fun SignupScreen(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
+            if (passwordError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "password must be at least 6 and at most 25 characters",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
             item(span = { GridItemSpan(4) }) {
                 Text(
                     text = "fields marked with * are required",
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
             item(span = { GridItemSpan(4) }) {
                 Button(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("SignupScreen", "clicked signup button")
-                    if (onSignup(tag, email, password)) {
-                        onSignedUp()
-                    } else {
-                        Log.e("SignupScreen", "signup failed")
+
+                    emailError = !email.matches(emailRegex)
+                    Log.i("SignupScreen", "emailError $emailError")
+                    passwordError = password.length < 6 || password.length > 25
+                    Log.i("SignupScreen", "passwordError $passwordError")
+
+                    if (!(emailError || passwordError)) {
+                        if (onSignup(tag, email, password)) {
+                            Log.i("SignupScreen", "signup succeeded")
+                            onSignedUp()
+                        } else {
+                            Log.e("SignupScreen", "signup call failed")
+                        }
                     }
                 }) {
                     Text("Sign up")
@@ -166,7 +217,7 @@ fun SignupScreen(
                     Log.i("SignupScreen", "clicked cancel button")
                     onCancel()
                 }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Cancel")
                 }
             }
         }
@@ -194,6 +245,10 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
     var password by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
+    var loginError by remember { mutableStateOf(false) }
+
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
@@ -211,8 +266,11 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                             contentDescription = "",
                         )
                     },
+                    isError = emailError,
                     onValueChange = { v: String ->
                         email = v
+                        emailError = false
+                        loginError = false
                         Log.i("LoginScreen", "entered text in email field: $email")
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
@@ -221,6 +279,16 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+            }
+            if (emailError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "email is required to log in",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
             }
             item(span = { GridItemSpan(4) }) {
                 TextField(
@@ -233,8 +301,11 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                             contentDescription = "",
                         )
                     },
+                    isError = passwordError,
                     onValueChange = { v: String ->
                         password = v
+                        passwordError = false
+                        loginError = false
                         // Don't emit the actual password, but make sure to report the string size
                         // for easy debugging.
                         Log.i(
@@ -250,13 +321,41 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
+            if (passwordError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "password is required to log in",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
+            if (loginError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "incorrect email and password combination",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
             item(span = { GridItemSpan(4) }) {
                 Button(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("LoginScreen", "clicked login button")
-                    if (loginFun(email, password)) {
-                        onLogin()
-                    } else {
-                        Log.e("LoginScreen", "login failed")
+
+                    emailError = email.isEmpty()
+                    passwordError = password.isEmpty()
+
+                    if (!(emailError || passwordError)) {
+                        if (loginFun(email, password)) {
+                            Log.i("LoginScreen", "login succeeded")
+                            onLogin()
+                        } else {
+                            Log.e("LoginScreen", "login failed")
+                            loginError = true
+                        }
                     }
                 }) {
                     Text("Log in")
@@ -267,7 +366,7 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                     Log.i("LoginScreen", "clicked sign up button")
                     onSignup()
                 }) {
-                    Text("Sign up", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Sign up", color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
         }
