@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -101,6 +102,7 @@ fun EditTappGroupScreen(
     var descriptionError by remember { mutableStateOf(false) }
 
     var showSelectEmojiDialog by remember { mutableStateOf(false) }
+    var showDeleteGroupDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
 
@@ -129,12 +131,11 @@ fun EditTappGroupScreen(
                     if (!new) {
                         IconButton(onClick = {
                             Log.i("EditTappGroupScreen", "clicked the delete button")
-                            deleteGroup(tappGroup)
-                            goBackHome()
+                            showDeleteGroupDialog = true
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
-                                contentDescription = "Go to account"
+                                contentDescription = "Delete the tapp group"
                             )
                         }
                     }
@@ -245,6 +246,14 @@ fun EditTappGroupScreen(
         }
     }
 
+    if (showDeleteGroupDialog) {
+        ConfirmTappGroupDeleteDialog({
+            deleteGroup(tappGroup)
+            goBackHome()
+            showDeleteGroupDialog = false
+        }, { showDeleteGroupDialog = false })
+    }
+
     if (showSelectEmojiDialog) {
         EmojiPicker({ showSelectEmojiDialog = false }, { e ->
             Log.i(
@@ -254,6 +263,48 @@ fun EditTappGroupScreen(
             emoji = e
         })
     }
+}
+
+@Composable
+fun ConfirmTappGroupDeleteDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Are you sure you want to delete the group?")
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OutlinedButton(
+                    onClick = onCancel,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Cancel")
+                }
+                Button(
+                    onClick = onConfirm,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Confirm")
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ConfirmTappGroupDeleteDialogPreview() {
+    ConfirmTappGroupDeleteDialog({}, {})
 }
 
 @Composable
