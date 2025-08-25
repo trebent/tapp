@@ -30,7 +30,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.github.trebent.tapp.R
-import com.github.trebent.tapp.viewmodel.AuthViewModel
 import com.github.trebent.tapp.viewmodel.TappGroup
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.newTappGroup
@@ -42,20 +41,16 @@ import kotlinx.coroutines.flow.StateFlow
 @ExperimentalMaterial3Api
 @Composable
 fun HomeScreenRoute(
-    authViewModel: AuthViewModel,
     tappGroupViewModel: TappGroupViewModel,
-    goToGroup: (tappGroup: TappGroup) -> Unit,
+    goToGroup: (TappGroup) -> Unit,
     goToAccount: () -> Unit,
-    goToLogin: () -> Unit
 ) {
-    Log.i("Home", "home route")
+    Log.i("HomeScreenRoute", "navigated")
 
     HomeScreen(
         tappGroupViewModel.groups,
-        { authViewModel.logout() },
         goToGroup,
         goToAccount,
-        goToLogin,
     )
 }
 
@@ -63,12 +58,10 @@ fun HomeScreenRoute(
 @Composable
 fun HomeScreen(
     groups: StateFlow<List<TappGroup>>,
-    logout: () -> Unit,
     goToGroup: (tappGroup: TappGroup) -> Unit,
     goToAccount: () -> Unit,
-    goToLogin: () -> Unit
 ) {
-    Log.i("Home", "rendering HomeScreen")
+    Log.i("HomeScreen", "rendering")
     val items by groups.collectAsState()
 
     Scaffold(
@@ -83,6 +76,7 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = {
                         Log.i("HomeScreen", "clicked account icon")
+                        goToAccount()
                     }) {
                         Icon(
                             imageVector = Icons.Filled.AccountCircle,
@@ -143,6 +137,6 @@ fun TappGroupRow(tappGroup: TappGroup, openGroup: (tappGroup: TappGroup) -> Unit
 @Composable
 fun HomeScreenPreview() {
     HomeScreen(
-        MutableStateFlow(testGroups), {}, {}, {}, {}
+        MutableStateFlow(testGroups), {}, {},
     )
 }

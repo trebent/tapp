@@ -62,14 +62,16 @@ import com.github.trebent.tapp.viewmodel.testGroup
 @Composable
 fun EditTappGroupScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
-    lookupId: Int,
+    lookupTappGroup: TappGroup,
     goBack: () -> Unit,
     goBackHome: () -> Unit
 ) {
-    val new = lookupId == 0
+    Log.i("EditTappGroupScreenRoute", "navigated")
+
+    val new = lookupTappGroup.id == 0
     var actualTappGroup: TappGroup = newTappGroup
     if (!new) {
-        actualTappGroup = tappGroupViewModel.get(lookupId)
+        actualTappGroup = tappGroupViewModel.get(lookupTappGroup.id)
     }
     EditTappGroupScreen(
         new,
@@ -357,6 +359,7 @@ fun TappGroupScreenRoute(
     goToGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
+    Log.i("TappGroupScreenRoute", "navigated")
     val actualTappGroup = tappGroupViewModel.get(lookupTappGroup.id)
     TappGroupScreen(actualTappGroup, goToGroup, goBack)
 }
@@ -368,7 +371,7 @@ fun TappGroupScreen(
     goToGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
-    Log.i("EditTappGroupScreen", "rendering")
+    Log.i("TappGroupScreen", "rendering")
 
     Scaffold(
         topBar = {

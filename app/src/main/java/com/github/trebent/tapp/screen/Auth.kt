@@ -42,10 +42,12 @@ val emailRegex = Regex.fromLiteral("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
 
 
 @Composable
-fun SignupScreenRoute(authViewModel: AuthViewModel,
-                      onCancel: () -> Unit,
-                      onSignedUp: () -> Unit) {
-    Log.i("Home", "signup route")
+fun SignupScreenRoute(
+    authViewModel: AuthViewModel,
+    onCancel: () -> Unit,
+    onSignedUp: () -> Unit
+) {
+    Log.i("SignupScreenRoute", "navigated")
 
     SignupScreen({ t, e, p -> authViewModel.signup(t, e, p) }, onCancel, onSignedUp)
 }
@@ -56,7 +58,7 @@ fun SignupScreen(
     onCancel: () -> Unit,
     onSignedUp: () -> Unit
 ) {
-    Log.i("Home", "rending SignupScreen")
+    Log.i("SignupScreen", "rendering")
 
     var tag by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -240,17 +242,19 @@ fun SignupScreenPreview() {
 }
 
 @Composable
-fun LoginScreenRoute(authViewModel: AuthViewModel,
-                     onSignup: () -> Unit,
-                     onLogin: () -> Unit) {
-    Log.i("Home", "login route")
+fun LoginScreenRoute(
+    authViewModel: AuthViewModel,
+    onSignup: () -> Unit,
+    onLogin: () -> Unit
+) {
+    Log.i("LoginScreenRoute", "navigated")
 
     LoginScreen({ u, p -> authViewModel.login(u, p) }, onSignup, onLogin)
 }
 
 @Composable
 fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onLogin: () -> Unit) {
-    Log.i("Home", "rending LoginScreen")
+    Log.i("LoginScreen", "rendering")
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

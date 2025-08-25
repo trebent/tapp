@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 
 const val testUsername = "u"
-const val testPassword = "p"
+var testPassword = "p"
 
 
 class AuthViewModel() : ViewModel() {
@@ -18,6 +18,9 @@ class AuthViewModel() : ViewModel() {
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
     val initialised = _i.asStateFlow()
+
+    private val _tag = MutableStateFlow("")
+    val tag = _tag.asStateFlow()
 
     init {
         Log.i("AuthViewModel", "initialising the auth view model")
@@ -49,5 +52,17 @@ class AuthViewModel() : ViewModel() {
     fun logout() {
         Log.i("AuthViewModel", "logout")
         _loginState.value = false
+    }
+
+    fun updateTag(tag: String) {
+        Log.i("AuthViewModel", "updating tag to $tag")
+    }
+
+    fun updatePassword(password: String) {
+        Log.i("AuthViewModel", "updating password")
+        if (BuildConfig.TAPP_TEST_MODE) {
+            Log.d("AuthViewModel", "set test password")
+            testPassword = password
+        }
     }
 }

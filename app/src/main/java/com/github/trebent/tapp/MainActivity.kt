@@ -84,11 +84,9 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
             }
             composable("home") {
                 HomeScreenRoute(
-                    authViewModel,
                     tappGroupViewModel,
                     goToGroup,
                     goToAccount,
-                    goToLogin,
                 )
             }
             composable<TappGroup> { nbse ->
@@ -97,7 +95,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
                 if (lookupTappGroup.edit) {
                     EditTappGroupScreenRoute(
                         tappGroupViewModel,
-                        lookupTappGroup.id,
+                        lookupTappGroup,
                         goBack,
                         goBackHome,
                     )
