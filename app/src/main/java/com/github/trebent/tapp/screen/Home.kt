@@ -29,8 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.github.trebent.tapp.viewmodel.AuthViewModel
 import com.github.trebent.tapp.R
+import com.github.trebent.tapp.viewmodel.AuthViewModel
 import com.github.trebent.tapp.viewmodel.TappGroup
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.newTappGroup
@@ -93,7 +93,7 @@ fun HomeScreen(groups: StateFlow<List<TappGroup>>,
         },
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.padding(padding).padding(horizontal = 16.dp)) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
                 verticalArrangement = Arrangement.Bottom,
@@ -113,7 +113,7 @@ fun TappGroupRow(tappGroup: TappGroup, openGroup: (tappGroup: TappGroup) -> Unit
     OutlinedButton(
         shape = RoundedCornerShape(8.dp),
         onClick = {
-            Log.i("HomeScreen", "opening group ${tappGroup.name}")
+            Log.i("HomeScreen", "opening group ${tappGroup.id}: ${tappGroup.name}")
             openGroup(tappGroup)
         },
         modifier = Modifier.padding(bottom = 8.dp)

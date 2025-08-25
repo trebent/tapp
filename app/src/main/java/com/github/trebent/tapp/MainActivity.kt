@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -63,6 +62,8 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
     val isLoggedIn = authViewModel.isLoggedIn()
 
     val goBack: () -> Unit = { navController.popBackStack() }
+    val goBackHome: () -> Unit =
+        { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -72,7 +73,6 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
             startDestination = if (isLoggedIn) "home" else "login",
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 16.dp)
         ) {
             composable("splash") { SplashScreen() }
             composable("account") {
@@ -94,6 +94,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
                         tappGroupViewModel,
                         lookupTappGroup.id,
                         goBack,
+                        goBackHome,
                     )
                 } else {
                     TappGroupScreenRoute(
@@ -108,7 +109,12 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
                 LoginScreenRoute(
                     authViewModel,
                     { navController.navigate("signup") },
-                    { navController.navigate("home") }
+                    {
+                        navController.navigate("home") {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             composable("signup") {

@@ -42,7 +42,9 @@ val emailRegex = Regex.fromLiteral("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
 
 
 @Composable
-fun SignupScreenRoute(authViewModel: AuthViewModel, onCancel: () -> Unit, onSignedUp: () -> Unit) {
+fun SignupScreenRoute(authViewModel: AuthViewModel,
+                      onCancel: () -> Unit,
+                      onSignedUp: () -> Unit) {
     Log.i("Home", "signup route")
 
     SignupScreen({ t, e, p -> authViewModel.signup(t, e, p) }, onCancel, onSignedUp)
@@ -65,7 +67,12 @@ fun SignupScreen(
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             verticalArrangement = Arrangement.Bottom,
@@ -233,7 +240,9 @@ fun SignupScreenPreview() {
 }
 
 @Composable
-fun LoginScreenRoute(authViewModel: AuthViewModel, onSignup: () -> Unit, onLogin: () -> Unit) {
+fun LoginScreenRoute(authViewModel: AuthViewModel,
+                     onSignup: () -> Unit,
+                     onLogin: () -> Unit) {
     Log.i("Home", "login route")
 
     LoginScreen({ u, p -> authViewModel.login(u, p) }, onSignup, onLogin)
@@ -251,11 +260,16 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
     var passwordError by remember { mutableStateOf(false) }
     var loginError by remember { mutableStateOf(false) }
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             verticalArrangement = Arrangement.Bottom,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             item(span = { GridItemSpan(4) }) {
                 TextField(

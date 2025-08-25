@@ -71,12 +71,23 @@ class TappGroupViewModel() : ViewModel() {
         }
     }
 
-    fun create(newTappGroup: TappGroup) {
-        Log.i("GroupViewModel", "adding group ${newTappGroup.name}")
-        _groups.value = _groups.value + newTappGroup
+    fun create(n: TappGroup) {
+        Log.i("GroupViewModel", "adding group ${n.name}")
+        val temp = TappGroup(
+            _groups.value.size + 2,
+            n.name,
+            n.emoji,
+            n.description,
+            false
+        )
+        Log.i("GroupViewModel", "TEMP, gave it id ${temp.id}")
+        _groups.value = _groups.value + temp
     }
 
     fun update(updatedTappGroup: TappGroup) {
         Log.i("GroupViewModel", "updating group ${updatedTappGroup.id}: ${updatedTappGroup.name}")
+        _groups.value = _groups.value.map { group ->
+            if (group.id == updatedTappGroup.id) updatedTappGroup else group
+        }
     }
 }

@@ -6,13 +6,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,6 +47,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -56,7 +62,8 @@ import com.github.trebent.tapp.viewmodel.testGroup
 fun EditTappGroupScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
     lookupId: Int,
-    goBack: () -> Unit
+    goBack: () -> Unit,
+    goBackHome: () -> Unit
 ) {
     val new = lookupId == 0
     var actualTappGroup: TappGroup = newTappGroup
@@ -70,6 +77,7 @@ fun EditTappGroupScreenRoute(
         { tg -> tappGroupViewModel.save(tg) },
         { tg -> tappGroupViewModel.delete(tg) },
         goBack,
+        goBackHome,
     )
 }
 
@@ -80,8 +88,11 @@ fun EditTappGroupScreen(
     tappGroup: TappGroup,
     saveGroup: (tappGroup: TappGroup) -> Unit,
     deleteGroup: (tappGroup: TappGroup) -> Unit,
-    goBack: () -> Unit
+    goBack: () -> Unit,
+    goBackHome: () -> Unit
 ) {
+    Log.i("EditTappGroupScreen", "rendering")
+
     var name by remember { mutableStateOf(tappGroup.name) }
     var description by remember { mutableStateOf(tappGroup.description) }
     var emoji by remember { mutableStateOf(tappGroup.emoji) }
@@ -119,7 +130,7 @@ fun EditTappGroupScreen(
                         IconButton(onClick = {
                             Log.i("EditTappGroupScreen", "clicked the delete button")
                             deleteGroup(tappGroup)
-                            goBack()
+                            goBackHome()
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
@@ -133,7 +144,9 @@ fun EditTappGroupScreen(
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
-            modifier = Modifier.padding(padding),
+            modifier = Modifier
+                .padding(padding)
+                .padding(horizontal = 16.dp),
         ) {
             item(span = { GridItemSpan(4) }) {
                 TextField(
@@ -305,6 +318,8 @@ fun TappGroupScreen(
     editGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
+    Log.i("EditTappGroupScreen", "rendering")
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -324,7 +339,10 @@ fun TappGroupScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        Log.i("TappGroupScreen", "clicked edit button")
+                        Log.i(
+                            "TappGroupScreen",
+                            "clicked edit button, opening ${tappGroup.id}: ${tappGroup.name}"
+                        )
                         tappGroup.edit = true
                         editGroup(tappGroup)
                     }) {
@@ -336,32 +354,84 @@ fun TappGroupScreen(
                 }
             )
         },
+        modifier = Modifier.fillMaxSize()
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
-            modifier = Modifier.padding(padding),
+            modifier = Modifier
+                .padding(padding)
+                .padding(horizontal = 16.dp),
         ) {
             item(span = { GridItemSpan(4) }) {
-                Text("Tapp it!", style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.Center) {
+                    Text(
+                        "Tapp it!",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
             item(span = { GridItemSpan(4) }) {
-                Button(onClick = {
-                    Log.i("TappGroupScreen", "tapping group ${tappGroup.id}: ${tappGroup.name}")
-                }, shape = RoundedCornerShape(8.dp)) {
-                    Text(tappGroup.emoji)
+                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center) {
+                    TappButton(
+                        tappGroup.emoji,
+                        {
+                            Log.i("TappGroupScreen", "tapped!!! ${tappGroup.id}: ${tappGroup.name}")
+                        },
+                        128.dp,
+                        56.sp,
+                    )
                 }
             }
             if (!tappGroup.description.isEmpty()) {
                 item(span = { GridItemSpan(4) }) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Text(
+                            "Group description",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        Text(
+                            tappGroup.description,
+                        )
+                    }
+                }
+            }
+            item(span = { GridItemSpan(4) }) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Text(
+                        "Tapp history",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
                     Text(
                         tappGroup.description,
                     )
                 }
             }
-            item(span = { GridItemSpan(4) }) {
-                Text("Tapps", style = MaterialTheme.typography.titleMedium)
-            }
         }
+    }
+}
+
+@Composable
+fun TappButton(emoji: String, onClick: () -> Unit, size: Dp, fontSize: TextUnit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.size(size),
+        shape = CircleShape,
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Text(
+            text = emoji,
+            fontSize = fontSize,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -374,11 +444,11 @@ fun TappGroupScreenPreview() {
 @Preview
 @Composable
 fun NewGroupScreenPreview() {
-    EditTappGroupScreen(true, newTappGroup, {}, {}, {})
+    EditTappGroupScreen(true, newTappGroup, {}, {}, {}, {})
 }
 
 @Preview
 @Composable
 fun EditGroupScreenPreview() {
-    EditTappGroupScreen(false, testGroup, {}, {}, {})
+    EditTappGroupScreen(false, testGroup, {}, {}, {}, {})
 }
