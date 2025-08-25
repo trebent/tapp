@@ -1,4 +1,4 @@
-package com.github.trebent.tapp
+package com.github.trebent.tapp.screen
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.github.trebent.tapp.viewmodel.AuthViewModel
+import com.github.trebent.tapp.R
+import com.github.trebent.tapp.viewmodel.TappGroup
+import com.github.trebent.tapp.viewmodel.TappGroupViewModel
+import com.github.trebent.tapp.viewmodel.newTappGroup
+import com.github.trebent.tapp.viewmodel.testGroups
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -36,13 +42,13 @@ import kotlinx.coroutines.flow.StateFlow
 @ExperimentalMaterial3Api
 @Composable
 fun HomeScreenRoute(authViewModel: AuthViewModel,
-                    groupViewModel: GroupViewModel,
+                    tappGroupViewModel: TappGroupViewModel,
                     openGroup: (tappGroup: TappGroup) -> Unit,
                     onLogout: () -> Unit) {
     Log.i("Home", "home route")
 
     HomeScreen(
-        groupViewModel.groups,
+        tappGroupViewModel.groups,
         openGroup,
         { authViewModel.logout() },
         onLogout,

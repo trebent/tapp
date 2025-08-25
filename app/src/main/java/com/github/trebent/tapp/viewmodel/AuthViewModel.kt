@@ -1,8 +1,9 @@
-package com.github.trebent.tapp
+package com.github.trebent.tapp.viewmodel
 
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.github.trebent.tapp.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 

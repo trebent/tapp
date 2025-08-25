@@ -1,11 +1,10 @@
-package com.github.trebent.tapp
+package com.github.trebent.tapp.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
-import kotlin.collections.listOf
 
 
 @Serializable
@@ -17,23 +16,23 @@ data class TappGroup(
     var edit: Boolean
 )
 
-val newTappGroup = TappGroup(0, "", "","", true)
-val testGroup = TappGroup(12, "group name", "","group description", false)
+val newTappGroup = TappGroup(0, "", "", "", true)
+val testGroup = TappGroup(12, "group name", "", "group description", false)
 
 val testGroups = listOf(
     TappGroup(1, "group1", "", "some words", false),
-    TappGroup(2, "group2", "","some words", false),
-    TappGroup(3, "group3", "","some words", false),
-    TappGroup(4, "group4", "","some words", false),
-    TappGroup(5, "group5", "","some words", false),
-    TappGroup(6, "group6", "","some words", false),
-    TappGroup(7, "group7", "","some words",  false),
-    TappGroup(8, "group8", "","some words",  false),
-    TappGroup(9, "group9", "","some words", false),
-    TappGroup(10, "group10", "","some words", false),
+    TappGroup(2, "group2", "", "some words", false),
+    TappGroup(3, "group3", "", "some words", false),
+    TappGroup(4, "group4", "", "some words", false),
+    TappGroup(5, "group5", "", "some words", false),
+    TappGroup(6, "group6", "", "some words", false),
+    TappGroup(7, "group7", "", "some words", false),
+    TappGroup(8, "group8", "", "some words", false),
+    TappGroup(9, "group9", "", "some words", false),
+    TappGroup(10, "group10", "", "some words", false),
 )
 
-class GroupViewModel() : ViewModel() {
+class TappGroupViewModel() : ViewModel() {
     private val _groups = MutableStateFlow<List<TappGroup>>(emptyList())
     val groups = _groups.asStateFlow()
 
@@ -57,7 +56,12 @@ class GroupViewModel() : ViewModel() {
         }
         return tg
     }
-    
+
+    fun delete(tappGroup: TappGroup) {
+        Log.i("GroupViewModel", "deleting group ${tappGroup.id}: ${tappGroup.name}")
+        _groups.value = _groups.value - tappGroup
+    }
+
     fun save(tappGroup: TappGroup) {
         Log.i("GroupViewModel", "saving group ${tappGroup.id}: ${tappGroup.name}")
         if (tappGroup.id == 0) {

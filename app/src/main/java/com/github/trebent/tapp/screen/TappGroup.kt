@@ -1,8 +1,6 @@
-package com.github.trebent.tapp
+package com.github.trebent.tapp.screen
 
 import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -13,10 +11,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,29 +32,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlin.text.ifEmpty
+import com.github.trebent.tapp.viewmodel.TappGroup
+import com.github.trebent.tapp.viewmodel.TappGroupViewModel
+import com.github.trebent.tapp.viewmodel.newTappGroup
+import com.github.trebent.tapp.viewmodel.testGroup
 
 
 @Composable
-fun EditTappGroupScreenRoute(groupViewModel: GroupViewModel, lookupId: Int, goBack: () -> Unit) {
+fun EditTappGroupScreenRoute(tappGroupViewModel: TappGroupViewModel, lookupId: Int, goBack: () -> Unit) {
     val new = lookupId == 0
     var actualTappGroup: TappGroup = newTappGroup
     if (!new) {
-        actualTappGroup = groupViewModel.get(lookupId)
+        actualTappGroup = tappGroupViewModel.get(lookupId)
         actualTappGroup.edit = true
     }
-    EditTappGroupScreen(new, actualTappGroup, { tg -> groupViewModel.save(tg) }, goBack)
+    EditTappGroupScreen(
+        new,
+        actualTappGroup,
+        { tg -> tappGroupViewModel.save(tg) },
+        { tg -> tappGroupViewModel.delete(tg) },
+        goBack,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTappGroupScreen(new: Boolean,
-                        tappGroup: TappGroup,
-                        saveGroup: (tappGroup: TappGroup) -> Unit,
-                        goBack: () -> Unit) {
+fun EditTappGroupScreen(
+    new: Boolean,
+    tappGroup: TappGroup,
+    saveGroup: (tappGroup: TappGroup) -> Unit,
+    deleteGroup: (tappGroup: TappGroup) -> Unit,
+    goBack: () -> Unit
+) {
     var name by remember { mutableStateOf(tappGroup.name) }
     var description by remember { mutableStateOf(tappGroup.description) }
     var emoji by remember { mutableStateOf(tappGroup.emoji) }
@@ -69,23 +76,42 @@ fun EditTappGroupScreen(new: Boolean,
     val focusManager = LocalFocusManager.current
 
     Scaffold(
-        topBar = { TopAppBar(
-            title = {
-                Text(text = if (new) "Create a new group" else "Editing ${tappGroup.name}", style = MaterialTheme.typography.titleLarge)
-            },
-            navigationIcon = {
-                IconButton(onClick = {
-                    Log.i("EditTappGroupScreen", "clicked the back button")
-                    tappGroup.edit = false
-                    goBack()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Go to account"
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = if (new) "Create a new group" else "Editing ${tappGroup.name}",
+                        style = MaterialTheme.typography.titleLarge
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        Log.i("EditTappGroupScreen", "clicked the back button")
+                        tappGroup.edit = false
+                        goBack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Go to account"
+                        )
+                    }
+                },
+                actions = {
+                    if (!new) {
+                        IconButton(onClick = {
+                            Log.i("EditTappGroupScreen", "clicked the delete button")
+                            deleteGroup(tappGroup)
+                            goBack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Go to account"
+                            )
+                        }
+                    }
                 }
-            },
-        )},
+            )
+        },
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
@@ -170,48 +196,54 @@ fun EditTappGroupScreen(new: Boolean,
 }
 
 @Composable
-fun TappGroupScreenRoute(groupViewModel: GroupViewModel,
-                         lookupTappGroup: TappGroup,
-                         editGroup: (tappGroup: TappGroup) -> Unit,
-                         goBack: () -> Unit) {
-    val actualTappGroup = groupViewModel.get(lookupTappGroup.id)
+fun TappGroupScreenRoute(
+    tappGroupViewModel: TappGroupViewModel,
+    lookupTappGroup: TappGroup,
+    editGroup: (tappGroup: TappGroup) -> Unit,
+    goBack: () -> Unit
+) {
+    val actualTappGroup = tappGroupViewModel.get(lookupTappGroup.id)
     TappGroupScreen(actualTappGroup, editGroup, goBack)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TappGroupScreen(tappGroup: TappGroup,
-                    editGroup: (tappGroup: TappGroup) -> Unit,
-                    goBack: () -> Unit) {
+fun TappGroupScreen(
+    tappGroup: TappGroup,
+    editGroup: (tappGroup: TappGroup) -> Unit,
+    goBack: () -> Unit
+) {
     Scaffold(
-        topBar = { TopAppBar(
-            title = {
-                Text(text = tappGroup.name, style = MaterialTheme.typography.titleLarge)
-            },
-            navigationIcon = {
-                IconButton(onClick = {
-                    Log.i("TappGroupScreen", "clicked the back button")
-                    goBack()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Go to account"
-                    )
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = tappGroup.name, style = MaterialTheme.typography.titleLarge)
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        Log.i("TappGroupScreen", "clicked the back button")
+                        goBack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Go to account"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        Log.i("TappGroupScreen", "clicked edit button")
+                        tappGroup.edit = true
+                        editGroup(tappGroup)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit tapp group"
+                        )
+                    }
                 }
-            },
-            actions = {
-                IconButton(onClick = {
-                    Log.i("TappGroupScreen", "clicked edit button")
-                    tappGroup.edit = true
-                    editGroup(tappGroup)
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit tapp group"
-                    )
-                }
-            }
-        )},
+            )
+        },
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
@@ -234,7 +266,7 @@ fun TappGroupScreen(tappGroup: TappGroup,
                     )
                 }
             }
-            item(span = {GridItemSpan(4) }) {
+            item(span = { GridItemSpan(4) }) {
                 Text("Tapps", style = MaterialTheme.typography.titleMedium)
             }
         }
@@ -250,11 +282,11 @@ fun TappGroupScreenPreview() {
 @Preview
 @Composable
 fun NewGroupScreenPreview() {
-    EditTappGroupScreen(true, newTappGroup, {}, {})
+    EditTappGroupScreen(true, newTappGroup, {}, {}, {})
 }
 
 @Preview
 @Composable
 fun EditGroupScreenPreview() {
-    EditTappGroupScreen(false, testGroup, {}, {})
+    EditTappGroupScreen(false, testGroup, {}, {}, {})
 }
