@@ -70,7 +70,6 @@ fun EditTappGroupScreenRoute(
     var actualTappGroup: TappGroup = newTappGroup
     if (!new) {
         actualTappGroup = tappGroupViewModel.get(lookupId)
-        actualTappGroup.edit = true
     }
     EditTappGroupScreen(
         new,
@@ -123,7 +122,7 @@ fun EditTappGroupScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go to account"
+                            contentDescription = "Go back"
                         )
                     }
                 },
@@ -355,18 +354,18 @@ fun EmojiPickerPreview() {
 fun TappGroupScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
     lookupTappGroup: TappGroup,
-    editGroup: (tappGroup: TappGroup) -> Unit,
+    goToGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
     val actualTappGroup = tappGroupViewModel.get(lookupTappGroup.id)
-    TappGroupScreen(actualTappGroup, editGroup, goBack)
+    TappGroupScreen(actualTappGroup, goToGroup, goBack)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TappGroupScreen(
     tappGroup: TappGroup,
-    editGroup: (tappGroup: TappGroup) -> Unit,
+    goToGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("EditTappGroupScreen", "rendering")
@@ -395,7 +394,7 @@ fun TappGroupScreen(
                             "clicked edit button, opening ${tappGroup.id}: ${tappGroup.name}"
                         )
                         tappGroup.edit = true
-                        editGroup(tappGroup)
+                        goToGroup(tappGroup)
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Edit,

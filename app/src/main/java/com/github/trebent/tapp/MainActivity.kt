@@ -64,6 +64,10 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
     val goBack: () -> Unit = { navController.popBackStack() }
     val goBackHome: () -> Unit =
         { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
+    val goToLogin: () -> Unit =
+        { navController.navigate("login") { popUpTo(0) { inclusive = true } } }
+    val goToAccount: () -> Unit = { navController.navigate("account") }
+    val goToGroup: (TappGroup) -> Unit = { tg -> navController.navigate(tg) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -76,14 +80,15 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
         ) {
             composable("splash") { SplashScreen() }
             composable("account") {
-                AccountScreenRoute(authViewModel, { navController.navigate("login") }, goBack)
+                AccountScreenRoute(authViewModel, goToLogin, goBack)
             }
             composable("home") {
                 HomeScreenRoute(
                     authViewModel,
                     tappGroupViewModel,
-                    { tg -> navController.navigate(tg) },
-                    { navController.navigate("login") },
+                    goToGroup,
+                    goToAccount,
+                    goToLogin,
                 )
             }
             composable<TappGroup> { nbse ->
@@ -100,7 +105,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
                     TappGroupScreenRoute(
                         tappGroupViewModel,
                         lookupTappGroup,
-                        { tg -> navController.navigate(tg) },
+                        goToGroup,
                         goBack,
                     )
                 }

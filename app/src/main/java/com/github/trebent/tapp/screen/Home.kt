@@ -41,49 +41,61 @@ import kotlinx.coroutines.flow.StateFlow
 
 @ExperimentalMaterial3Api
 @Composable
-fun HomeScreenRoute(authViewModel: AuthViewModel,
-                    tappGroupViewModel: TappGroupViewModel,
-                    openGroup: (tappGroup: TappGroup) -> Unit,
-                    onLogout: () -> Unit) {
+fun HomeScreenRoute(
+    authViewModel: AuthViewModel,
+    tappGroupViewModel: TappGroupViewModel,
+    goToGroup: (tappGroup: TappGroup) -> Unit,
+    goToAccount: () -> Unit,
+    goToLogin: () -> Unit
+) {
     Log.i("Home", "home route")
 
     HomeScreen(
         tappGroupViewModel.groups,
-        openGroup,
         { authViewModel.logout() },
-        onLogout,
+        goToGroup,
+        goToAccount,
+        goToLogin,
     )
 }
 
 @ExperimentalMaterial3Api
 @Composable
-fun HomeScreen(groups: StateFlow<List<TappGroup>>,
-               openGroup: (tappGroup: TappGroup) -> Unit,
-               logout: () -> Unit,
-               onLogout: () -> Unit) {
+fun HomeScreen(
+    groups: StateFlow<List<TappGroup>>,
+    logout: () -> Unit,
+    goToGroup: (tappGroup: TappGroup) -> Unit,
+    goToAccount: () -> Unit,
+    goToLogin: () -> Unit
+) {
     Log.i("Home", "rendering HomeScreen")
     val items by groups.collectAsState()
-    
+
     Scaffold(
-        topBar = { TopAppBar(
-            title = {
-                Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
-            },
-            actions = {
-                IconButton(onClick = {
-                    Log.i("HomeScreen", "clicked account icon")
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = "Go to account"
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge
                     )
+                },
+                actions = {
+                    IconButton(onClick = {
+                        Log.i("HomeScreen", "clicked account icon")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountCircle,
+                            contentDescription = "Go to account"
+                        )
+                    }
                 }
-            }
-        )},
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 Log.i("HomeScreen", "clicked main create group FAB")
-                openGroup(newTappGroup)
+                goToGroup(newTappGroup)
             }) {
                 Icon(
                     imageVector = Icons.Filled.AddCircle,
@@ -93,14 +105,18 @@ fun HomeScreen(groups: StateFlow<List<TappGroup>>,
         },
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
                 verticalArrangement = Arrangement.Bottom,
                 horizontalArrangement = Arrangement.Center
             ) {
                 items(items, span = { GridItemSpan(4) }) { tappGroup ->
-                    TappGroupRow(tappGroup, openGroup)
+                    TappGroupRow(tappGroup, goToGroup)
                 }
             }
 
@@ -127,6 +143,6 @@ fun TappGroupRow(tappGroup: TappGroup, openGroup: (tappGroup: TappGroup) -> Unit
 @Composable
 fun HomeScreenPreview() {
     HomeScreen(
-        MutableStateFlow(testGroups), {}, {}, {}
+        MutableStateFlow(testGroups), {}, {}, {}, {}
     )
 }
