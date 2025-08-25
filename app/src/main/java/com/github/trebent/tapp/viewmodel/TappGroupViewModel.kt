@@ -17,7 +17,7 @@ data class TappGroup(
 )
 
 val newTappGroup = TappGroup(0, "", "", "", true)
-val testGroup = TappGroup(12, "group name", "", "group description", false)
+val testGroup = TappGroup(12, "group name", "❤️", "group description", false)
 
 val testGroups = listOf(
     TappGroup(1, "group1", "", "some words", false),
