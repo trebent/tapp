@@ -69,15 +69,19 @@ fun Main(authViewModel: AuthViewModel, groupViewModel: GroupViewModel) {
                 .padding(horizontal = 16.dp)
         ) {
             composable("splash") { SplashScreen() }
+            composable("account") {
+                AccountScreenRoute(authViewModel, { navController.navigate("login") }, goBack)
+            }
             composable("home") {
                 HomeScreenRoute(
                     authViewModel,
                     groupViewModel,
                     { tg -> navController.navigate(tg) },
-                    { navController.navigate("login") })
+                    { navController.navigate("login") },
+                )
             }
-            composable<TappGroup> { bse ->
-                val lookupTappGroup: TappGroup = bse.toRoute()
+            composable<TappGroup> { nbse ->
+                val lookupTappGroup: TappGroup = nbse.toRoute()
 
                 if (lookupTappGroup.edit) {
                     EditTappGroupScreenRoute(
