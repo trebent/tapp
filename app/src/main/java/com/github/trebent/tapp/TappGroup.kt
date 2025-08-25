@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlin.text.ifEmpty
 
 
 @Composable
@@ -137,7 +138,7 @@ fun EditTappGroupScreen(new: Boolean,
             }
             item(span = { GridItemSpan(4) }) {
                 Row {
-                    Text(if (emoji.length == 0) "Pick an emoji" else emoji)
+                    Text(emoji.ifEmpty { "Pick an emoji" })
 
                     OutlinedTextField(
                         value = emoji,
@@ -151,7 +152,9 @@ fun EditTappGroupScreen(new: Boolean,
                 Button(
                     shape = RoundedCornerShape(8.dp),
                     onClick = {
+                        Log.i("EditTappGroupScreen", "clicked to save the group")
                         if (name.length == 0) {
+                            Log.e("EditTappGroupScreen", "group name was invalid")
                             nameError = true
                         } else {
                             saveGroup(TappGroup(tappGroup.id, name, emoji, description, false))
@@ -210,8 +213,30 @@ fun TappGroupScreen(tappGroup: TappGroup,
             }
         )},
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            Text("this is the tapp group viewing screen")
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            modifier = Modifier.padding(padding),
+        ) {
+            item(span = { GridItemSpan(4) }) {
+                Text("Tapp it!", style = MaterialTheme.typography.titleMedium)
+            }
+            item(span = { GridItemSpan(4) }) {
+                Button(onClick = {
+                    Log.i("TappGroupScreen", "tapping group ${tappGroup.id}: ${tappGroup.name}")
+                }, shape = RoundedCornerShape(8.dp)) {
+                    Text(tappGroup.emoji)
+                }
+            }
+            if (!tappGroup.description.isEmpty()) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        tappGroup.description,
+                    )
+                }
+            }
+            item(span = {GridItemSpan(4) }) {
+                Text("Tapps", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }

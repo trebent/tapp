@@ -35,7 +35,7 @@ fun AccountScreen(logout: () -> Unit, onLogout: () -> Unit, goBack: () -> Unit) 
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        Log.i("TappGroupScreen", "clicked the back button")
+                        Log.i("AccountScreen", "clicked the back button")
                         goBack()
                     }) {
                         Icon(
@@ -50,6 +50,7 @@ fun AccountScreen(logout: () -> Unit, onLogout: () -> Unit, goBack: () -> Unit) 
         Column(modifier = Modifier.padding(padding)) {
             Text("This is account settings")
             Button(onClick = {
+                Log.i("AccountScreen", "clicked the logout button")
                 logout()
                 onLogout()
             }, shape = RoundedCornerShape(8.dp)) {
