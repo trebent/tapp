@@ -65,4 +65,9 @@ class AuthViewModel() : ViewModel() {
             testPassword = password
         }
     }
+
+    fun deleteAccount() {
+        Log.i("AuthViewModel", "deleting account")
+        _loginState.value = false
+    }
 }

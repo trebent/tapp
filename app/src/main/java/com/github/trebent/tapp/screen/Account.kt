@@ -1,7 +1,9 @@
 package com.github.trebent.tapp.screen
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,11 +13,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -25,12 +29,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.github.trebent.tapp.viewmodel.AuthViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +50,7 @@ fun AccountScreenRoute(authViewModel: AuthViewModel, goToLogin: () -> Unit, goBa
         authViewModel.tag,
         { tag -> authViewModel.updateTag(tag) },
         { password -> authViewModel.updatePassword(password) },
+        { authViewModel.deleteAccount() },
         { authViewModel.logout() },
         goToLogin,
         goBack
@@ -56,6 +63,7 @@ fun AccountScreen(
     currentTag: StateFlow<String>,
     updateTag: (String) -> Unit,
     updatePassword: (String) -> Unit,
+    deleteAccount: () -> Unit,
     logout: () -> Unit,
     goToLogin: () -> Unit,
     goBack: () -> Unit
@@ -68,6 +76,8 @@ fun AccountScreen(
     var passwordError by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+
+    var showConfirmAccountDelete by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -171,20 +181,81 @@ fun AccountScreen(
                 Text("Update")
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                Log.i("AccountScreen", "clicked the logout button")
-                logout()
-                goToLogin()
-            }, shape = RoundedCornerShape(8.dp)) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp), onClick = {
+                    Log.i("AccountScreen", "clicked the logout button")
+                    logout()
+                    goToLogin()
+                }, shape = RoundedCornerShape(8.dp)
+            ) {
                 Text("Log out")
+            }
+            OutlinedButton(
+                modifier = Modifier
+                    .fillMaxWidth(), onClick = {
+                    Log.i("AccountScreen", "clicked the delete account button")
+                    showConfirmAccountDelete = true
+                }, shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Delete account")
             }
         }
     }
+
+    if (showConfirmAccountDelete) {
+        ConfirmAccountDeleteDialog({ showConfirmAccountDelete = false }, deleteAccount)
+    }
+}
+
+@Composable
+fun ConfirmAccountDeleteDialog(onDismiss: () -> Unit, deleteAccount: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Are you sure you want to delete your account? This action is not reversible.",
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Cancel")
+                }
+                Button(onClick = {
+                    deleteAccount()
+                    onDismiss()
+                }, shape = RoundedCornerShape(8.dp), modifier = Modifier.padding(8.dp)) {
+                    Text("Confirm")
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ConfirmAccountDeleteDialogPreview() {
+    ConfirmAccountDeleteDialog({}, {})
 }
 
 @ExperimentalMaterial3Api
 @Preview
 @Composable
 fun AccountScreenPreview() {
-    AccountScreen(MutableStateFlow("tag").asStateFlow(), {}, {}, {}, {}, {})
+    AccountScreen(MutableStateFlow("tag").asStateFlow(), {}, {}, {}, {}, {}, {})
 }
