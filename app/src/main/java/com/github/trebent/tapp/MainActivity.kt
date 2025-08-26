@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -59,8 +58,6 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
     Log.i("Main", "main compose entrypoint")
     val navController = rememberNavController()
 
-    val isLoggedIn = authViewModel.isLoggedIn()
-
     val goBack: () -> Unit = { navController.popBackStack() }
     val goBackHome: () -> Unit =
         { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
@@ -74,7 +71,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = if (isLoggedIn) "home" else "login",
+            startDestination = "login",
             modifier = Modifier
                 .padding(padding)
         ) {
@@ -126,15 +123,6 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
                     { navController.navigate("login") }
                 ) { navController.navigate("login") }
             }
-        }
-    }
-
-    // One-off navigation post NavHost graph-setting and view model initialisation.
-    LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
-            navController.navigate("home")
-        } else {
-            navController.navigate("login")
         }
     }
 }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,7 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -95,15 +94,15 @@ fun EditTappGroupScreen(
 ) {
     Log.i("EditTappGroupScreen", "rendering")
 
-    var name by remember { mutableStateOf(tappGroup.name) }
-    var description by remember { mutableStateOf(tappGroup.description) }
-    var emoji by remember { mutableStateOf(tappGroup.emoji) }
+    var name by rememberSaveable { mutableStateOf(tappGroup.name) }
+    var description by rememberSaveable { mutableStateOf(tappGroup.description) }
+    var emoji by rememberSaveable { mutableStateOf(tappGroup.emoji) }
 
-    var nameError by remember { mutableStateOf(false) }
-    var descriptionError by remember { mutableStateOf(false) }
+    var nameError by rememberSaveable { mutableStateOf(false) }
+    var descriptionError by rememberSaveable { mutableStateOf(false) }
 
-    var showSelectEmojiDialog by remember { mutableStateOf(false) }
-    var showDeleteGroupDialog by remember { mutableStateOf(false) }
+    var showSelectEmojiDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteGroupDialog by rememberSaveable { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
 
@@ -186,23 +185,33 @@ fun EditTappGroupScreen(
                     isError = descriptionError,
                     onValueChange = { v: String ->
                         description = v
+                        descriptionError = description.length > 250
                         Log.i(
                             "EditTappGroupScreen",
                             "entered text in description field: $description"
                         )
                     },
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        onDone = { focusManager.clearFocus() }
                     ),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+            }
+            if (nameError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "description is too long, it must be maximum 250 characters",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
             }
             item(span = { GridItemSpan(2) }) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxHeight(),
                 ) {
                     if (emoji.isEmpty()) {
                         Text("", fontSize = 32.sp, modifier = Modifier.padding(bottom = 8.dp))
@@ -256,7 +265,7 @@ fun EditTappGroupScreen(
     }
 
     if (showSelectEmojiDialog) {
-        EmojiPicker({ showSelectEmojiDialog = false }, { e ->
+        EmojiPickerDialog({ showSelectEmojiDialog = false }, { e ->
             Log.i(
                 "EditTappGroupScreen",
                 "selected emoji $e for group ${tappGroup.id}: ${tappGroup.name}"
@@ -269,61 +278,70 @@ fun EditTappGroupScreen(
 @Composable
 fun ConfirmTappGroupDeleteDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
     Dialog(onDismissRequest = onCancel) {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        ConfirmTappGroupDeleteContent(onConfirm, onCancel)
+    }
+}
+
+@Composable
+fun ConfirmTappGroupDeleteContent(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Are you sure you want to delete the group?")
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
             ) {
-                Text("Are you sure you want to delete the group?")
+                Text("Cancel")
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+            Button(
+                onClick = onConfirm,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
             ) {
-                OutlinedButton(
-                    onClick = onCancel,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text("Cancel")
-                }
-                Button(
-                    onClick = onConfirm,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text("Confirm")
-                }
+                Text("Confirm")
             }
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun ConfirmTappGroupDeleteDialogPreview() {
-    ConfirmTappGroupDeleteDialog({}, {})
+    ConfirmTappGroupDeleteContent({}, {})
 }
 
 @Composable
-fun EmojiPicker(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
-    val emojis by remember { mutableStateOf(listOf("❤️", "🍺", "😭", "🎉", "👍", "🤌", "🔥", "🐶", "🐱")) }
+fun EmojiPickerDialog(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
-        Card {
-            LazyVerticalGrid(
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                columns = GridCells.Adaptive(minSize = 48.dp),
-            ) {
-                items(emojis) { e ->
-                    EmojiButton(e) {
-                        onSelect(e)
-                        onDismiss()
-                    }
+        EmojiPickerContent(onDismiss, onSelect)
+    }
+}
+
+@Composable
+fun EmojiPickerContent(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
+    Card {
+        LazyVerticalGrid(
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            columns = GridCells.Adaptive(minSize = 48.dp),
+        ) {
+            items(listOf("❤️", "🍺", "😭", "🎉", "👍", "🤌", "🔥", "🐶", "🐱")) { e ->
+                EmojiButton(e) {
+                    onSelect(e)
+                    onDismiss()
                 }
             }
         }
@@ -346,10 +364,10 @@ fun EmojiButton(emoji: String, onClick: () -> Unit) {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun EmojiPickerPreview() {
-    EmojiPicker({}, {})
+    EmojiPickerContent({}, {})
 }
 
 @Composable

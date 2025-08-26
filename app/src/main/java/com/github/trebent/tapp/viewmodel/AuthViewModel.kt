@@ -36,7 +36,10 @@ class AuthViewModel() : ViewModel() {
     }
 
     fun signup(tag: String, email: String, password: String): Boolean {
-        Log.i("AuthViewModel", "signup")
+        Log.i(
+            "AuthViewModel",
+            "signup tag: $tag, email: $email, password length: ${password.length}"
+        )
         return true
     }
 
@@ -56,6 +59,7 @@ class AuthViewModel() : ViewModel() {
 
     fun updateTag(tag: String) {
         Log.i("AuthViewModel", "updating tag to $tag")
+        _tag.value = tag
     }
 
     fun updatePassword(password: String) {

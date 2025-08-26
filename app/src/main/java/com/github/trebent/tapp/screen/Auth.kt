@@ -24,7 +24,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.github.trebent.tapp.viewmodel.AuthViewModel
 
 
-val emailRegex = Regex.fromLiteral("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
+val emailRegex = Regex("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
 
 
 @Composable
@@ -60,14 +60,14 @@ fun SignupScreen(
 ) {
     Log.i("SignupScreen", "rendering")
 
-    var tag by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var tag by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    var tagError by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf(false) }
+    var tagError by rememberSaveable { mutableStateOf(false) }
+    var emailError by rememberSaveable { mutableStateOf(false) }
+    var passwordError by rememberSaveable { mutableStateOf(false) }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -93,6 +93,7 @@ fun SignupScreen(
                     },
                     isError = tagError,
                     onValueChange = { v: String ->
+                        tagError = false
                         tag = v
                         Log.i("LoginScreen", "entered text in tag field: $tag")
                     },
@@ -133,6 +134,7 @@ fun SignupScreen(
                     },
                     isError = emailError,
                     onValueChange = { v: String ->
+                        emailError = false
                         email = v
                         Log.i("LoginScreen", "entered text in email field: $email")
                     },
@@ -169,6 +171,7 @@ fun SignupScreen(
                     },
                     isError = passwordError,
                     onValueChange = { v: String ->
+                        passwordError = false
                         password = v
                         // Don't emit the actual password, but make sure to report the string size
                         // for easy debugging.
@@ -256,13 +259,13 @@ fun LoginScreenRoute(
 fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onLogin: () -> Unit) {
     Log.i("LoginScreen", "rendering")
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    var emailError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf(false) }
-    var loginError by remember { mutableStateOf(false) }
+    var emailError by rememberSaveable { mutableStateOf(false) }
+    var passwordError by rememberSaveable { mutableStateOf(false) }
+    var loginError by rememberSaveable { mutableStateOf(false) }
 
     Box(
         contentAlignment = Alignment.Center,
