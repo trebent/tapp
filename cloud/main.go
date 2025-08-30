@@ -12,34 +12,9 @@ import (
 	"time"
 
 	"github.com/trebent/envparser"
+	"github.com/trebent/tapp-backend/env"
+	"github.com/trebent/tapp-backend/handler"
 	"github.com/trebent/zerologr"
-)
-
-var (
-	//nolint:gochecknoglobals // Global vars are fine for env vars.
-	addr = envparser.Register(&envparser.Opts[string]{
-		Value: ":8080",
-		Name:  "ADDR",
-		Desc:  "Address to listen on",
-	})
-	//nolint:gochecknoglobals // Global vars are fine for env vars.
-	logToConsole = envparser.Register(&envparser.Opts[bool]{
-		Value: true,
-		Name:  "LOG_TO_CONSOLE",
-		Desc:  "Log to console instead of JSON",
-	})
-	//nolint:gochecknoglobals // Global vars are fine for env vars.
-	logLevel = envparser.Register(&envparser.Opts[int]{
-		Value: 0,
-		Name:  "LOG_LEVEL",
-		Desc:  "Log level (higher is more verbose), negative values are invalid",
-		Validate: func(v int) error {
-			if v < 0 {
-				return fmt.Errorf("value is negative: %d", v)
-			}
-			return nil
-		},
-	})
 )
 
 const (
@@ -57,20 +32,20 @@ func main() {
 	}
 
 	// ExitOnError is set to true, so this will exit on error.
-	_ = envparser.Parse()
+	_ = env.Parse()
 
 	zerologr.Set(zerologr.New(&zerologr.Opts{
-		Console: logToConsole.Value(),
+		Console: env.LogToConsole.Value(),
 		Caller:  true,
-		V:       logLevel.Value(),
+		V:       env.LogLevel.Value(),
 	}))
 
 	signalCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	httpServer := &http.Server{
-		Addr:         addr.Value(),
-		Handler:      http.DefaultServeMux,
+		Addr:         env.Addr.Value(),
+		Handler:      handler.Handler(),
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 	}
