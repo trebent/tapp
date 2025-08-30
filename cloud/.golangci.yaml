@@ -430,6 +430,8 @@ linters:
           - gosec
           - noctx
           - wrapcheck
+          - usestdlibvars
+          - unused
 
     paths:
       - examples

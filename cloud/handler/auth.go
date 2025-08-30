@@ -43,17 +43,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	if _, err := model.Deserialize(r.Body, &body); err != nil {
 		w.WriteHeader(400)
 		return
-	} else {
-		account, err := db.Read(&model.Account{Email: body.Email})
-		if err != nil {
-			w.WriteHeader(401)
-			return
-		}
+	}
 
-		if account.Password != body.Password {
-			w.WriteHeader(401)
-			return
-		}
+	account, err := db.Read(&model.Account{Email: body.Email})
+	if err != nil {
+		w.WriteHeader(401)
+		return
+	}
+
+	if account.Password != body.Password {
+		w.WriteHeader(401)
+		return
 	}
 
 	hash := newHash()

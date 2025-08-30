@@ -8,7 +8,7 @@ func Handler() http.Handler {
 	mux := http.NewServeMux()
 
 	// Health endpoint
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(204)
 	})
 
@@ -207,8 +207,6 @@ func Handler() http.Handler {
 		default:
 			w.WriteHeader(405)
 		}
-
 	})
-
 	return mux
 }

@@ -79,9 +79,8 @@ func Save[T Model](entity T) error {
 	} else {
 		if len(all) >= entityLimit {
 			return fmt.Errorf("entity limit reached (%d) for table %s", entityLimit, getTableName[T]())
-		} else {
-			all = append(all, entity)
 		}
+		all = append(all, entity)
 	}
 
 	data, err := json.MarshalIndent(all, "", "  ")
@@ -205,15 +204,18 @@ func createTable[T Model]() error {
 		return err
 	}
 
-	if f, err := os.Create(getTablePath[T]()); err != nil {
+	var (
+		f   *os.File
+		err error
+	)
+	if f, err = os.Create(getTablePath[T]()); err != nil {
 		return err
-	} else {
-		defer f.Close()
+	}
+	defer f.Close()
 
-		data := []byte("[]")
-		if _, err := f.Write(data); err != nil {
-			return err
-		}
+	data := []byte("[]")
+	if _, err := f.Write(data); err != nil {
+		return err
 	}
 
 	return nil
