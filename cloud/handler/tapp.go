@@ -48,6 +48,9 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: dispatch notification to group members
+	// TODO: dispatch notification to group members
+	// TODO: dispatch notification to group members
+	// TODO: dispatch notification to group members
 }
 
 func handleTappGet(w http.ResponseWriter, r *http.Request) {
