@@ -26,7 +26,8 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 
 	email := getUserEmailFromToken(r)
 
-	isMember := email == group.Owner || slices.ContainsFunc(group.Members, func(a *model.Account) bool { return a.Email == email })
+	isMember := email == group.Owner ||
+		slices.ContainsFunc(group.Members, func(a *model.Account) bool { return a.Email == email })
 	if !isMember {
 		w.WriteHeader(403)
 		return

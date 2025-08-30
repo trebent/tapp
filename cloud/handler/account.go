@@ -20,7 +20,8 @@ func handleAccountCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !regexpEmail.MatchString(newAccount.Email) || !regexpPassword.MatchString(newAccount.Password) {
+	if !regexpEmail.MatchString(newAccount.Email) ||
+		!regexpPassword.MatchString(newAccount.Password) {
 		w.WriteHeader(400)
 		return
 	}

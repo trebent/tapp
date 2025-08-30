@@ -432,6 +432,7 @@ linters:
           - wrapcheck
           - usestdlibvars
           - unused
+          - golines
 
     paths:
       - examples

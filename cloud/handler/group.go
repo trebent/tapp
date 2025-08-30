@@ -53,7 +53,8 @@ func handleGroupList(w http.ResponseWriter, r *http.Request) {
 
 	email := getUserEmailFromToken(r)
 	filteredGroups := slices.DeleteFunc(groups, func(g *model.Group) bool {
-		return g.Owner != email && !slices.ContainsFunc(g.Members, func(a *model.Account) bool { return a.Email == email })
+		return g.Owner != email &&
+			!slices.ContainsFunc(g.Members, func(a *model.Account) bool { return a.Email == email })
 	})
 
 	if err := model.WriteJSON(w, filteredGroups); err != nil {

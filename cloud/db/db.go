@@ -20,9 +20,12 @@ type Model interface {
 const entityLimit = 2500
 
 var (
-	idMap     = sync.Map{} // map[string]int
+	//nolint:gochecknoglobals
+	idMap = sync.Map{} // map[string]int
+	//nolint:gochecknoglobals
 	tableLock = sync.Map{} // map[string]*sync.Mutex
 
+	//nolint:gochecknoglobals
 	logger = zerologr.V(10)
 )
 
@@ -30,6 +33,7 @@ func AquireTableLock[T Model]() {
 	tableName := getTableName[T]()
 	logger.Info("acquiring table lock", "table", tableName)
 	val, _ := tableLock.LoadOrStore(tableName, &sync.Mutex{})
+	//nolint:errcheck
 	mutex := val.(*sync.Mutex)
 	mutex.Lock()
 }
@@ -38,6 +42,7 @@ func ReleaseTableLock[T Model]() {
 	tableName := getTableName[T]()
 	logger.Info("releasing table lock", "table", tableName)
 	val, _ := tableLock.Load(tableName)
+	//nolint:errcheck
 	mutex := val.(*sync.Mutex)
 	mutex.Unlock()
 }
@@ -45,6 +50,7 @@ func ReleaseTableLock[T Model]() {
 func NextID[T Model]() int {
 	tableName := getTableName[T]()
 	val, _ := idMap.LoadOrStore(tableName, 0)
+	//nolint:errcheck
 	nextID := val.(int) + 1
 	idMap.Store(tableName, nextID)
 	return nextID
@@ -88,6 +94,7 @@ func Save[T Model](entity T) error {
 		return err
 	}
 
+	//nolint:gosec
 	if err := os.WriteFile(getTablePath[T](), data, 0o644); err != nil {
 		return err
 	}
@@ -108,7 +115,8 @@ func Read[T Model](entity T) (T, error) {
 
 	targetPtr := find(entities, entity)
 	if targetPtr == nil {
-		return target, fmt.Errorf("entity with key %s not found in table %s", entity.Key(), getTableName[T]())
+		return target, fmt.Errorf("entity with key %s not found in table %s",
+			entity.Key(), getTableName[T]())
 	}
 
 	target = *targetPtr
@@ -163,6 +171,7 @@ func Delete[T Model](entity T) error {
 		return err
 	}
 
+	//nolint:gosec
 	if err := os.WriteFile(getTablePath[T](), data, 0o644); err != nil {
 		return err
 	}
@@ -200,6 +209,7 @@ func tableExists[T Model]() bool {
 func createTable[T Model]() error {
 	logger.Info("creating table", "table", getTableName[T]())
 
+	//nolint:gosec
 	if err := os.MkdirAll(env.FileSystem.Value(), 0o755); err != nil {
 		return err
 	}

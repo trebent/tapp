@@ -10,6 +10,7 @@ import (
 	"github.com/trebent/tapp-backend/model"
 )
 
+//nolint:gochecknoglobals
 var authMap = sync.Map{}
 
 func authenticated(w http.ResponseWriter, r *http.Request) bool {
@@ -28,6 +29,7 @@ func getUserEmailFromToken(r *http.Request) string {
 
 func getTokenValue(token string) string {
 	if val, ok := authMap.Load(token); ok {
+		//nolint:errcheck
 		return val.(string)
 	}
 
