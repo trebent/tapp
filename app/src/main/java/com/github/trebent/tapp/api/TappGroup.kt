@@ -1,12 +1,11 @@
 package com.github.trebent.tapp.api
 
-import kotlinx.serialization.Serializable
 import retrofit2.Response
+import retrofit2.http.GET
 import retrofit2.http.Header
-import retrofit2.http.POST
 
-@Serializable
-data class RemoteTappGroup(
+
+data class TappGroup(
     val id: Int,
     val name: String,
     val emoji: String,
@@ -16,6 +15,6 @@ data class RemoteTappGroup(
 )
 
 interface GroupService {
-    @POST("/groups")
-    suspend fun listGroups(@Header("Authorization") token: String): Response<List<RemoteTappGroup>>
+    @GET("/groups")
+    suspend fun listGroups(@Header("Authorization") token: String): Response<List<TappGroup>>
 }

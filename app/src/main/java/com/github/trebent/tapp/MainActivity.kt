@@ -24,7 +24,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.screen.AccountScreenRoute
 import com.github.trebent.tapp.screen.EditTappGroupScreenRoute
@@ -75,10 +74,19 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
     val goToLogin: () -> Unit =
         { navController.navigate("login") { popUpTo(0) { inclusive = true } } }
     val goToAccount: () -> Unit = { navController.navigate("account") }
-    val goToGroup: (TappGroup) -> Unit = { tg -> navController.navigate(tg) }
+    val goToViewGroup: (TappGroup) -> Unit = { tg ->
+        tappGroupViewModel.selectGroup(tg)
+        navController.navigate("viewGroup")
+    }
+    val goToEditGroup: (TappGroup) -> Unit = { tg ->
+        tappGroupViewModel.selectGroup(tg)
+        navController.navigate("editGroup")
+    }
 
     val isLoggedIn = accountViewModel.isLoggedIn.collectAsState()
     val startDest = if (isLoggedIn.value) "home" else "login"
+
+    Log.i("Main", "start destination set to '${startDest}'")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -96,28 +104,24 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
             composable("home") {
                 HomeScreenRoute(
                     tappGroupViewModel,
-                    goToGroup,
+                    goToViewGroup,
+                    goToEditGroup,
                     goToAccount,
                 )
             }
-            composable<TappGroup> { nbse ->
-                val lookupTappGroup: TappGroup = nbse.toRoute()
-
-                if (lookupTappGroup.edit) {
-                    EditTappGroupScreenRoute(
-                        tappGroupViewModel,
-                        lookupTappGroup,
-                        goBack,
-                        goBackHome,
-                    )
-                } else {
-                    TappGroupScreenRoute(
-                        tappGroupViewModel,
-                        lookupTappGroup,
-                        goToGroup,
-                        goBack,
-                    )
-                }
+            composable("editGroup") {
+                EditTappGroupScreenRoute(
+                    tappGroupViewModel,
+                    goBack,
+                    goBackHome,
+                )
+            }
+            composable("viewGroup") {
+                TappGroupScreenRoute(
+                    tappGroupViewModel,
+                    goToEditGroup,
+                    goBack,
+                )
             }
             composable("login") {
                 LoginScreenRoute(

@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,29 +53,25 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.github.trebent.tapp.viewmodel.TappGroup
+import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.newTappGroup
 import com.github.trebent.tapp.viewmodel.testGroup
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 
 @Composable
 fun EditTappGroupScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
-    lookupTappGroup: TappGroup,
     goBack: () -> Unit,
     goBackHome: () -> Unit
 ) {
     Log.i("EditTappGroupScreenRoute", "navigated")
 
-    val new = lookupTappGroup.id == 0
-    var actualTappGroup: TappGroup = newTappGroup
-    if (!new) {
-        actualTappGroup = tappGroupViewModel.get(lookupTappGroup.id)
-    }
     EditTappGroupScreen(
-        new,
-        actualTappGroup,
+        tappGroupViewModel.selectedGroup,
         { tg -> tappGroupViewModel.save(tg) },
         { tg -> tappGroupViewModel.delete(tg) },
         goBack,
@@ -85,8 +82,7 @@ fun EditTappGroupScreenRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTappGroupScreen(
-    new: Boolean,
-    tappGroup: TappGroup,
+    tappGroupStateFlow: StateFlow<TappGroup>,
     saveGroup: (tappGroup: TappGroup) -> Unit,
     deleteGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit,
@@ -94,9 +90,12 @@ fun EditTappGroupScreen(
 ) {
     Log.i("EditTappGroupScreen", "rendering")
 
-    var name by rememberSaveable { mutableStateOf(tappGroup.name) }
-    var description by rememberSaveable { mutableStateOf(tappGroup.description) }
-    var emoji by rememberSaveable { mutableStateOf(tappGroup.emoji) }
+    val selectedGroup = tappGroupStateFlow.collectAsState()
+    val new = selectedGroup.value.id == 0
+
+    var name by rememberSaveable { mutableStateOf(selectedGroup.value.name) }
+    var description by rememberSaveable { mutableStateOf(selectedGroup.value.description) }
+    var emoji by rememberSaveable { mutableStateOf(selectedGroup.value.emoji) }
 
     var nameError by rememberSaveable { mutableStateOf(false) }
     var descriptionError by rememberSaveable { mutableStateOf(false) }
@@ -111,14 +110,13 @@ fun EditTappGroupScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (new) "Create a new group" else "Editing ${tappGroup.name}",
+                        text = if (new) "Create a new group" else "Editing ${selectedGroup.value.name}",
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = {
                         Log.i("EditTappGroupScreen", "clicked the back button")
-                        tappGroup.edit = false
                         goBack()
                     }) {
                         Icon(
@@ -247,13 +245,12 @@ fun EditTappGroupScreen(
                         } else {
                             saveGroup(
                                 TappGroup(
-                                    tappGroup.id,
+                                    selectedGroup.value.id,
                                     name,
                                     emoji,
                                     description,
                                     emptyList(),
                                     emptyList(),
-                                    false
                                 )
                             )
                             goBack()
@@ -268,7 +265,7 @@ fun EditTappGroupScreen(
 
     if (showDeleteGroupDialog) {
         ConfirmTappGroupDeleteDialog({
-            deleteGroup(tappGroup)
+            deleteGroup(selectedGroup.value)
             goBackHome()
             showDeleteGroupDialog = false
         }, { showDeleteGroupDialog = false })
@@ -278,7 +275,7 @@ fun EditTappGroupScreen(
         EmojiPickerDialog({ showSelectEmojiDialog = false }, { e ->
             Log.i(
                 "EditTappGroupScreen",
-                "selected emoji $e for group ${tappGroup.id}: ${tappGroup.name}"
+                "selected emoji $e for group ${selectedGroup.value.id}: ${selectedGroup.value.name}"
             )
             emoji = e
         })
@@ -383,29 +380,32 @@ fun EmojiPickerPreview() {
 @Composable
 fun TappGroupScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
-    lookupTappGroup: TappGroup,
-    goToGroup: (tappGroup: TappGroup) -> Unit,
+    goToEditGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("TappGroupScreenRoute", "navigated")
-    val actualTappGroup = tappGroupViewModel.get(lookupTappGroup.id)
-    TappGroupScreen(actualTappGroup, goToGroup, goBack)
+    TappGroupScreen(tappGroupViewModel.selectedGroup, goToEditGroup, goBack)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TappGroupScreen(
-    tappGroup: TappGroup,
-    goToGroup: (tappGroup: TappGroup) -> Unit,
+    tappGroupStateFlow: StateFlow<TappGroup>,
+    goToEditGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("TappGroupScreen", "rendering")
+
+    val selectedGroup = tappGroupStateFlow.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = tappGroup.name, style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        text = selectedGroup.value.name,
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -422,10 +422,9 @@ fun TappGroupScreen(
                     IconButton(onClick = {
                         Log.i(
                             "TappGroupScreen",
-                            "clicked edit button, opening ${tappGroup.id}: ${tappGroup.name}"
+                            "clicked edit button, opening ${selectedGroup.value.id}: ${selectedGroup.value.name}"
                         )
-                        tappGroup.edit = true
-                        goToGroup(tappGroup)
+                        goToEditGroup(selectedGroup.value)
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
@@ -455,16 +454,19 @@ fun TappGroupScreen(
             item(span = { GridItemSpan(4) }) {
                 Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center) {
                     TappButton(
-                        tappGroup.emoji,
+                        selectedGroup.value.emoji,
                         {
-                            Log.i("TappGroupScreen", "tapped!!! ${tappGroup.id}: ${tappGroup.name}")
+                            Log.i(
+                                "TappGroupScreen",
+                                "tapped!!! ${selectedGroup.value.id}: ${selectedGroup.value.name}"
+                            )
                         },
                         128.dp,
                         56.sp,
                     )
                 }
             }
-            if (!tappGroup.description.isEmpty()) {
+            if (!selectedGroup.value.description.isEmpty()) {
                 item(span = { GridItemSpan(4) }) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -476,7 +478,7 @@ fun TappGroupScreen(
                             modifier = Modifier.padding(16.dp)
                         )
                         Text(
-                            tappGroup.description,
+                            selectedGroup.value.description,
                         )
                     }
                 }
@@ -492,7 +494,7 @@ fun TappGroupScreen(
                         modifier = Modifier.padding(16.dp)
                     )
                     Text(
-                        tappGroup.description,
+                        selectedGroup.value.description,
                     )
                 }
             }
@@ -519,17 +521,17 @@ fun TappButton(emoji: String, onClick: () -> Unit, size: Dp, fontSize: TextUnit)
 @Preview
 @Composable
 fun TappGroupScreenPreview() {
-    TappGroupScreen(testGroup, {}, {})
+    TappGroupScreen(MutableStateFlow(testGroup).asStateFlow(), {}, {})
 }
 
 @Preview
 @Composable
 fun NewGroupScreenPreview() {
-    EditTappGroupScreen(true, newTappGroup, {}, {}, {}, {})
+    EditTappGroupScreen(MutableStateFlow(newTappGroup).asStateFlow(), {}, {}, {}, {})
 }
 
 @Preview
 @Composable
 fun EditGroupScreenPreview() {
-    EditTappGroupScreen(false, testGroup, {}, {}, {}, {})
+    EditTappGroupScreen(MutableStateFlow(testGroup).asStateFlow(), {}, {}, {}, {})
 }

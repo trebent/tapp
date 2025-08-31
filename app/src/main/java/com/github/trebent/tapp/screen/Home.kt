@@ -42,14 +42,16 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun HomeScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
-    goToGroup: (TappGroup) -> Unit,
+    goToViewGroup: (TappGroup) -> Unit,
+    goToEditGroup: (TappGroup) -> Unit,
     goToAccount: () -> Unit,
 ) {
     Log.i("HomeScreenRoute", "navigated")
 
     HomeScreen(
-        tappGroupViewModel.groups,
-        goToGroup,
+        tappGroupViewModel.list(),
+        goToViewGroup,
+        goToEditGroup,
         goToAccount,
     )
 }
@@ -58,7 +60,8 @@ fun HomeScreenRoute(
 @Composable
 fun HomeScreen(
     groups: StateFlow<List<TappGroup>>,
-    goToGroup: (tappGroup: TappGroup) -> Unit,
+    goToViewGroup: (TappGroup) -> Unit,
+    goToEditGroup: (TappGroup) -> Unit,
     goToAccount: () -> Unit,
 ) {
     Log.i("HomeScreen", "rendering")
@@ -89,7 +92,7 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 Log.i("HomeScreen", "clicked main create group FAB")
-                goToGroup(newTappGroup)
+                goToEditGroup(newTappGroup)
             }) {
                 Icon(
                     imageVector = Icons.Filled.AddCircle,
@@ -110,7 +113,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 items(items, span = { GridItemSpan(4) }) { tappGroup ->
-                    TappGroupRow(tappGroup, goToGroup)
+                    TappGroupRow(tappGroup, goToViewGroup)
                 }
             }
 
@@ -137,6 +140,6 @@ fun TappGroupRow(tappGroup: TappGroup, openGroup: (tappGroup: TappGroup) -> Unit
 @Composable
 fun HomeScreenPreview() {
     HomeScreen(
-        MutableStateFlow(testGroups), {}, {},
+        MutableStateFlow(testGroups), {}, {}, {},
     )
 }
