@@ -29,13 +29,12 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
-    private var _account = MutableStateFlow(Account(null, "", "", null))
+    private var _account = MutableStateFlow(Account("", "", null))
     private val _token = MutableStateFlow<String?>(null)
 
     val isLoggedIn = _loginState.asStateFlow()
     val initialised = _i.asStateFlow()
     val account: StateFlow<Account> = _account.asStateFlow()
-    val token: StateFlow<String?> = _token.asStateFlow()
 
     init {
         Log.i("AccountViewModel", "initialising the auth view model")
@@ -47,7 +46,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
             val email = preferences[emailkey]
             if (email != null) {
-                _account.value = Account(null, email, "", null)
+                _account.value = Account(email, "", null)
             }
 
             if (_token.value != null) {
@@ -78,7 +77,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
 
         viewModelScope.launch {
-            val response = accountService.createAccount(Account(null, email, password, t))
+            val response = accountService.createAccount(Account(email, password, t))
             if (response.isSuccessful) {
                 // no need to set the account body, credentials are provided on login, in fact it
                 // would be confusing to set it here.
@@ -110,7 +109,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                     } else {
 
                         _token.value = newToken
-                        _account.value = Account(null, email, "", "")
+                        _account.value = Account(email, "", "")
 
                         application.dataStore.edit { preferences ->
                             preferences[tokenkey] = newToken
@@ -138,7 +137,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
                 _loginState.value = false
                 _token.value = null
-                _account.value = Account(null, "", "", null)
+                _account.value = Account("", "", null)
 
                 application.dataStore.edit { preferences ->
                     preferences.remove(tokenkey)
@@ -156,7 +155,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
     fun updateTag(tag: String) {
         Log.i("AccountViewModel", "updating tag to $tag")
         _account.value =
-            Account(_account.value.id, _account.value.email, _account.value.password, tag)
+            Account(_account.value.email, _account.value.password, tag)
     }
 
     fun updatePassword(password: String) {

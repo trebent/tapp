@@ -1,43 +1,72 @@
 package com.github.trebent.tapp.viewmodel
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import com.github.trebent.tapp.api.TappGroup
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.github.trebent.tapp.api.Account
+import com.github.trebent.tapp.dataStore
+import com.github.trebent.tapp.tokenkey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 
-val newTappGroup = TappGroup(0, "", "", "", true)
-val testGroup = TappGroup(12, "group name", "❤️", "group description", false)
-
-val testGroups = listOf(
-    TappGroup(1, "group1", "", "some words", false),
-    TappGroup(2, "group2", "", "some words", false),
-    TappGroup(3, "group3", "", "some words", false),
-    TappGroup(4, "group4", "", "some words", false),
-    TappGroup(5, "group5", "", "some words", false),
-    TappGroup(6, "group6", "", "some words", false),
-    TappGroup(7, "group7", "", "some words", false),
-    TappGroup(8, "group8", "", "some words", false),
-    TappGroup(9, "group9", "", "some words", false),
-    TappGroup(10, "group10", "", "some words", false),
+data class TappGroup(
+    val id: Int,
+    val name: String,
+    val emoji: String,
+    val description: String,
+    val members: List<Account>,
+    val invites: List<Account>,
+    var edit: Boolean
 )
 
-class TappGroupViewModel() : ViewModel() {
+val newTappGroup = TappGroup(0, "", "", "", emptyList(), emptyList(), true)
+val testGroup =
+    TappGroup(12, "group name", "❤️", "group description", emptyList(), emptyList(), false)
+
+val testGroups = listOf(
+    TappGroup(1, "group1", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(2, "group2", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(3, "group3", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(4, "group4", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(5, "group5", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(6, "group6", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(7, "group7", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(8, "group8", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(9, "group9", "", "some words", emptyList(), emptyList(), false),
+    TappGroup(10, "group10", "", "some words", emptyList(), emptyList(), false),
+)
+
+class TappGroupViewModel(private val application: Application) : AndroidViewModel(application) {
     private val _groups = MutableStateFlow<List<TappGroup>>(emptyList())
     val groups = _groups.asStateFlow()
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
+    private val _token = MutableStateFlow<String?>(null)
+
     val initialised = _i.asStateFlow()
 
     init {
         Log.i("GroupViewModel", "initialising the group view model")
-        // TODO: remove hardcoded sleep
-        Thread.sleep(200)
-        _groups.value = testGroups
-        // TODO: add cloud fetch
-        _i.value = true
+        viewModelScope.launch {
+            Log.i("GroupViewModel", "checking datastore for stored tokens")
+
+            val preferences = application.dataStore.data.first()
+            _token.value = preferences[tokenkey]
+
+            if (_token.value != null) {
+                Log.i("GroupViewModel", "found token, fetching groups")
+
+
+            }
+
+            Log.i("GroupViewModel", "initialised account view model")
+            _i.value = true
+        }
     }
 
     fun get(id: Int): TappGroup {
@@ -69,6 +98,8 @@ class TappGroupViewModel() : ViewModel() {
             n.name,
             n.emoji,
             n.description,
+            emptyList(),
+            emptyList(),
             false
         )
         Log.i("GroupViewModel", "TEMP, gave it id ${temp.id}")

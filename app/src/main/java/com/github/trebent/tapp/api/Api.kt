@@ -11,3 +11,4 @@ var retrofit = Retrofit.Builder()
     .build()
 
 val accountService = retrofit.create(AccountService::class.java)
+val groupService = retrofit.create(GroupService::class.java)

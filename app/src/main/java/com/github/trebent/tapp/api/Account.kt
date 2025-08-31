@@ -1,10 +1,12 @@
 package com.github.trebent.tapp.api
 
+import kotlinx.serialization.Serializable
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-data class Account(val id: Int?, val email: String, val password: String, val tag: String?)
+@Serializable
+data class Account(val email: String, val password: String, val tag: String?)
 data class LoginRequest(val email: String, val password: String)
 
 interface AccountService {

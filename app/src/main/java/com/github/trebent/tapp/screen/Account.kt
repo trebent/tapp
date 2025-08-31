@@ -365,7 +365,7 @@ fun ConfirmAccountDeleteDialogPreview() {
 @Composable
 fun AccountScreenPreview() {
     AccountScreen(
-        MutableStateFlow(Account(2, "", "", "tag")).asStateFlow(),
+        MutableStateFlow(Account("", "", "tag")).asStateFlow(),
         {},
         {},
         {},
