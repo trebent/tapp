@@ -2,7 +2,16 @@ package handler
 
 import (
 	"net/http"
+
+	"github.com/trebent/zerologr"
 )
+
+func logWrapper(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		zerologr.Info(r.Method + " " + r.URL.Path)
+		h.ServeHTTP(w, r)
+	})
+}
 
 //nolint:gocognit,funlen
 func Handler() http.Handler {
@@ -10,6 +19,7 @@ func Handler() http.Handler {
 
 	// Health endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		zerologr.Info("health check OK")
 		w.WriteHeader(http.StatusNoContent)
 	})
 
@@ -209,5 +219,6 @@ func Handler() http.Handler {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
-	return mux
+
+	return logWrapper(mux)
 }

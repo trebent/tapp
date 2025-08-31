@@ -51,6 +51,7 @@ func main() {
 	}
 
 	go func() {
+		zerologr.Info("starting tapp cloud service on port " + env.Addr.Value())
 		if err := httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) && err != nil {
 			zerologr.Error(err, "server start failed")
 			//nolint:gocritic // I know.
