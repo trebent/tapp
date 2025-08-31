@@ -32,7 +32,7 @@ class TappGroupViewModel() : ViewModel() {
     val initialised = _i.asStateFlow()
 
     init {
-        Log.i("GroupViewModel", "initialising the auth view model")
+        Log.i("GroupViewModel", "initialising the group view model")
         // TODO: remove hardcoded sleep
         Thread.sleep(200)
         _groups.value = testGroups

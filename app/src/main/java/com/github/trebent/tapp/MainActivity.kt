@@ -1,5 +1,6 @@
 package com.github.trebent.tapp
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -12,9 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -29,6 +35,11 @@ import com.github.trebent.tapp.screen.TappGroupScreenRoute
 import com.github.trebent.tapp.ui.theme.TappTheme
 import com.github.trebent.tapp.viewmodel.AccountViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
+
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+val tokenkey = stringPreferencesKey("auth_token")
+val emailkey = stringPreferencesKey("email")
 
 
 class MainActivity : ComponentActivity() {
@@ -66,12 +77,15 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
     val goToAccount: () -> Unit = { navController.navigate("account") }
     val goToGroup: (TappGroup) -> Unit = { tg -> navController.navigate(tg) }
 
+    val isLoggedIn = accountViewModel.isLoggedIn.collectAsState()
+    val startDest = if (isLoggedIn.value) "home" else "login"
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = "login",
+            startDestination = startDest,
             modifier = Modifier
                 .padding(padding)
         ) {

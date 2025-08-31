@@ -41,6 +41,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.github.trebent.tapp.api.Account
 import com.github.trebent.tapp.viewmodel.AccountViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,11 +56,11 @@ fun AccountScreenRoute(
 ) {
     Log.i("AccountScreenRoute", "navigated")
     AccountScreen(
-        accountViewModel.tag,
+        accountViewModel.account,
         { tag -> accountViewModel.updateTag(tag) },
         { password -> accountViewModel.updatePassword(password) },
         { accountViewModel.deleteAccount() },
-        { accountViewModel.logout() },
+        { o -> accountViewModel.logout(o) },
         goToLogin,
         goBack
     )
@@ -68,17 +69,17 @@ fun AccountScreenRoute(
 @ExperimentalMaterial3Api
 @Composable
 fun AccountScreen(
-    currentTag: StateFlow<String>,
+    account: StateFlow<Account>,
     updateTag: (String) -> Unit,
     updatePassword: (String) -> Unit,
     deleteAccount: () -> Unit,
-    logout: () -> Unit,
+    logout: (onDone: () -> Unit) -> Unit,
     goToLogin: () -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("AccountScreen", "rendering")
 
-    var tag by rememberSaveable { mutableStateOf(currentTag.value) }
+    var tag by rememberSaveable { mutableStateOf(account.value.tag ?: "") }
     var tagError by rememberSaveable { mutableStateOf(false) }
     var tagSaved by rememberSaveable { mutableStateOf(false) }
 
@@ -273,8 +274,10 @@ fun AccountScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp), onClick = {
                         Log.i("AccountScreen", "clicked the logout button")
-                        logout()
-                        goToLogin()
+                        logout({
+                            Log.i("AccountScreen", "logout completed")
+                            goToLogin()
+                        })
                     }, shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Log out")
@@ -361,5 +364,12 @@ fun ConfirmAccountDeleteDialogPreview() {
 @Preview
 @Composable
 fun AccountScreenPreview() {
-    AccountScreen(MutableStateFlow("tag").asStateFlow(), {}, {}, {}, {}, {}, {})
+    AccountScreen(
+        MutableStateFlow(Account(2, "", "", "tag")).asStateFlow(),
+        {},
+        {},
+        {},
+        {},
+        {},
+        {})
 }

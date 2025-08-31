@@ -23,7 +23,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("boolean", "TAPP_TEST_MODE", "true")
+            buildConfigField("boolean", "TAPP_TEST_MODE", "false")
             buildConfigField(
                 "String",
                 "TAPP_API_ENDPOINT",
@@ -75,7 +75,10 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.com.squareup.retrofit2)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.datastore)
+    implementation(libs.com.squareup.retrofit2.base)
+    implementation(libs.com.squareup.retrofit2.converter.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -49,12 +49,18 @@ fun SignupScreenRoute(
 ) {
     Log.i("SignupScreenRoute", "navigated")
 
-    SignupScreen({ t, e, p -> accountViewModel.signup(t, e, p) }, onCancel, onSignedUp)
+    SignupScreen(
+        { t, e, p, success, failure ->
+            accountViewModel.signup(t, e, p, success, failure)
+        },
+        onCancel,
+        onSignedUp,
+    )
 }
 
 @Composable
 fun SignupScreen(
-    onSignup: (t: String, e: String, p: String) -> Boolean,
+    onSignup: (t: String, e: String, p: String, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     onCancel: () -> Unit,
     onSignedUp: () -> Unit
 ) {
@@ -215,12 +221,12 @@ fun SignupScreen(
                     Log.i("SignupScreen", "passwordError $passwordError")
 
                     if (!(emailError || passwordError)) {
-                        if (onSignup(tag, email, password)) {
-                            Log.i("SignupScreen", "signup succeeded")
+                        onSignup(tag, email, password, {
                             onSignedUp()
-                        } else {
+                            Log.i("SignupScreen", "signup succeeded")
+                        }, {
                             Log.e("SignupScreen", "signup call failed")
-                        }
+                        })
                     }
                 }) {
                     Text("Sign up")
@@ -241,7 +247,7 @@ fun SignupScreen(
 @Preview
 @Composable
 fun SignupScreenPreview() {
-    SignupScreen({ t, e, p -> true }, {}, {})
+    SignupScreen({ t, e, p, s, f -> }, {}, {})
 }
 
 @Composable
@@ -252,11 +258,15 @@ fun LoginScreenRoute(
 ) {
     Log.i("LoginScreenRoute", "navigated")
 
-    LoginScreen({ u, p -> accountViewModel.login(u, p) }, onSignup, onLogin)
+    LoginScreen({ u, p, s, f -> accountViewModel.login(u, p, s, f) }, onSignup, onLogin)
 }
 
 @Composable
-fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onLogin: () -> Unit) {
+fun LoginScreen(
+    loginFun: (String, String, () -> Unit, () -> Unit) -> Unit,
+    onSignup: () -> Unit,
+    onLogin: () -> Unit
+) {
     Log.i("LoginScreen", "rendering")
 
     var email by rememberSaveable { mutableStateOf("") }
@@ -375,13 +385,13 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
                     passwordError = password.isEmpty()
 
                     if (!(emailError || passwordError)) {
-                        if (loginFun(email, password)) {
+                        loginFun(email, password, {
                             Log.i("LoginScreen", "login succeeded")
                             onLogin()
-                        } else {
+                        }, {
                             Log.e("LoginScreen", "login failed")
                             loginError = true
-                        }
+                        })
                     }
                 }) {
                     Text("Log in")
@@ -402,5 +412,5 @@ fun LoginScreen(loginFun: (String, String) -> Boolean, onSignup: () -> Unit, onL
 @Preview
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen({ u, p -> true }, {}, {})
+    LoginScreen({ u, p, s, f -> }, {}, {})
 }
