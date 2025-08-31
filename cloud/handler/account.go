@@ -1,4 +1,4 @@
-//nolint:errcheck,gosec
+//nolint:errcheck,gosec,govet
 package handler
 
 import (

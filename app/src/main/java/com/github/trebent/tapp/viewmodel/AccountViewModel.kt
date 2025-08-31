@@ -156,7 +156,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         Log.i("AccountViewModel", "updating tag to $tag")
 
         viewModelScope.launch {
-            accountService.updateAccount()
+            accountService.updateAccount(_ema)
         }
         _account.value =
             Account(_account.value.email, _account.value.password, tag)
