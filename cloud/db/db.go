@@ -50,6 +50,13 @@ func ReleaseTableLock[T Model]() {
 func NextID[T Model]() int {
 	tableName := getTableName[T]()
 	val, _ := idMap.LoadOrStore(tableName, 0)
+
+	if val == 0 {
+		//nolint:errcheck
+		es, _ := ReadAll[T]()
+		val = len(es)
+	}
+
 	//nolint:errcheck
 	nextID := val.(int) + 1
 	idMap.Store(tableName, nextID)

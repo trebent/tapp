@@ -229,7 +229,7 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Path[len("/groups/"):]
+	groupID := strings.Split(r.URL.Path, "/")[1]
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
@@ -369,7 +369,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGroupKick(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Path[len("/groups/"):]
+	groupID := strings.Split(r.URL.Path, "/")[1]
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
