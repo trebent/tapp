@@ -72,8 +72,8 @@ fun EditTappGroupScreenRoute(
 
     EditTappGroupScreen(
         tappGroupViewModel.selectedGroup,
-        { tg -> tappGroupViewModel.save(tg) },
-        { tg -> tappGroupViewModel.delete(tg) },
+        { tg, s, f -> tappGroupViewModel.save(tg, s, f) },
+        { tg, s, f -> tappGroupViewModel.delete(tg, s, f) },
         goBack,
         goBackHome,
     )
@@ -83,8 +83,8 @@ fun EditTappGroupScreenRoute(
 @Composable
 fun EditTappGroupScreen(
     tappGroupStateFlow: StateFlow<TappGroup>,
-    saveGroup: (tappGroup: TappGroup) -> Unit,
-    deleteGroup: (tappGroup: TappGroup) -> Unit,
+    saveGroup: (tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
+    deleteGroup: (tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     goBack: () -> Unit,
     goBackHome: () -> Unit
 ) {
@@ -94,7 +94,7 @@ fun EditTappGroupScreen(
     val new = selectedGroup.value.id == 0
 
     var name by rememberSaveable { mutableStateOf(selectedGroup.value.name) }
-    var description by rememberSaveable { mutableStateOf(selectedGroup.value.description) }
+    var description by rememberSaveable { mutableStateOf(selectedGroup.value.description ?: "") }
     var emoji by rememberSaveable { mutableStateOf(selectedGroup.value.emoji) }
 
     var nameError by rememberSaveable { mutableStateOf(false) }
@@ -168,7 +168,7 @@ fun EditTappGroupScreen(
             if (nameError) {
                 item(span = { GridItemSpan(4) }) {
                     Text(
-                        text = "name is required to create the group",
+                        text = "the group name must be at least 3 characters long",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -243,17 +243,25 @@ fun EditTappGroupScreen(
                             Log.e("EditTappGroupScreen", "group name was invalid")
                             nameError = true
                         } else {
-                            saveGroup(
-                                TappGroup(
-                                    selectedGroup.value.id,
-                                    name,
-                                    emoji,
-                                    description,
-                                    emptyList(),
-                                    emptyList(),
-                                )
+                            val updatedGroup = TappGroup(
+                                selectedGroup.value.id,
+                                name,
+                                emoji,
+                                selectedGroup.value.owner,
+                                description,
+                                selectedGroup.value.members,
+                                selectedGroup.value.invites,
                             )
-                            goBack()
+                            saveGroup(
+                                updatedGroup, {
+                                    Log.i("EditTappGroupScreen", "successfully saved the group")
+                                    goBack()
+                                }, {
+                                    Log.e("EditTappGroupScreen", "failed to save the group")
+                                    nameError = true
+                                }
+                            )
+
                         }
                     }
                 ) {
@@ -265,8 +273,12 @@ fun EditTappGroupScreen(
 
     if (showDeleteGroupDialog) {
         ConfirmTappGroupDeleteDialog({
-            deleteGroup(selectedGroup.value)
-            goBackHome()
+            deleteGroup(selectedGroup.value, {
+                Log.i("EditTappGroupScreen", "successfully deleted the group")
+                goBackHome()
+            }, {
+                Log.e("EditTappGroupScreen", "failed to delete the group")
+            })
             showDeleteGroupDialog = false
         }, { showDeleteGroupDialog = false })
     }
@@ -466,7 +478,7 @@ fun TappGroupScreen(
                     )
                 }
             }
-            if (!selectedGroup.value.description.isEmpty()) {
+            if (selectedGroup.value.description?.isEmpty() != true) {
                 item(span = { GridItemSpan(4) }) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -478,7 +490,7 @@ fun TappGroupScreen(
                             modifier = Modifier.padding(16.dp)
                         )
                         Text(
-                            selectedGroup.value.description,
+                            selectedGroup.value.description ?: "",
                         )
                     }
                 }
@@ -494,7 +506,7 @@ fun TappGroupScreen(
                         modifier = Modifier.padding(16.dp)
                     )
                     Text(
-                        selectedGroup.value.description,
+                        "Tapp history goes here",
                     )
                 }
             }
@@ -527,11 +539,21 @@ fun TappGroupScreenPreview() {
 @Preview
 @Composable
 fun NewGroupScreenPreview() {
-    EditTappGroupScreen(MutableStateFlow(newTappGroup).asStateFlow(), {}, {}, {}, {})
+    EditTappGroupScreen(
+        MutableStateFlow(newTappGroup).asStateFlow(),
+        { g, s, f -> },
+        { g, s, f -> },
+        {},
+        {})
 }
 
 @Preview
 @Composable
 fun EditGroupScreenPreview() {
-    EditTappGroupScreen(MutableStateFlow(testGroup).asStateFlow(), {}, {}, {}, {})
+    EditTappGroupScreen(
+        MutableStateFlow(testGroup).asStateFlow(),
+        { g, s, f -> },
+        { g, s, f -> },
+        {},
+        {})
 }

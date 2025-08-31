@@ -15,21 +15,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
-val newTappGroup = TappGroup(0, "", "", "", emptyList(), emptyList())
+val newTappGroup = TappGroup(0, "", "", "", "", emptyList(), emptyList())
 val testGroup =
-    TappGroup(12, "group name", "❤️", "group description", emptyList(), emptyList())
+    TappGroup(12, "group name", "❤️", "", "group description", emptyList(), emptyList())
 
 val testGroups = listOf(
-    TappGroup(1, "group1", "", "some words", emptyList(), emptyList()),
-    TappGroup(2, "group2", "", "some words", emptyList(), emptyList()),
-    TappGroup(3, "group3", "", "some words", emptyList(), emptyList()),
-    TappGroup(4, "group4", "", "some words", emptyList(), emptyList()),
-    TappGroup(5, "group5", "", "some words", emptyList(), emptyList()),
-    TappGroup(6, "group6", "", "some words", emptyList(), emptyList()),
-    TappGroup(7, "group7", "", "some words", emptyList(), emptyList()),
-    TappGroup(8, "group8", "", "some words", emptyList(), emptyList()),
-    TappGroup(9, "group9", "", "some words", emptyList(), emptyList()),
-    TappGroup(10, "group10", "", "some words", emptyList(), emptyList()),
+    TappGroup(1, "group1", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(2, "group2", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(3, "group3", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(4, "group4", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(5, "group5", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(6, "group6", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(7, "group7", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(8, "group8", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(9, "group9", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(10, "group10", "", "", "some words", emptyList(), emptyList()),
 )
 
 class TappGroupViewModel(private val application: Application) : AndroidViewModel(application) {
@@ -80,46 +80,75 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         _selectedGroup.value = group
     }
 
-    fun get(id: Int): TappGroup {
-        var tg = _groups.value.find { tg -> tg.id == id }
-        if (tg == null) {
-            tg = newTappGroup
-        }
-        return tg
-    }
-
-    fun delete(tappGroup: TappGroup) {
+    fun delete(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "deleting group ${tappGroup.id}: ${tappGroup.name}")
-        _groups.value = _groups.value - tappGroup
+        viewModelScope.launch {
+            val response = groupService.deleteGroup(_token.value!!, tappGroup.id)
+            if (response.isSuccessful) {
+                Log.i(
+                    "GroupViewModel",
+                    "successfully deleted group ${tappGroup.id}: ${tappGroup.name}"
+                )
+                onSuccess()
+            } else {
+                Log.e(
+                    "GroupViewModel",
+                    "failed to delete group ${tappGroup.id}: ${tappGroup.name}"
+                )
+                onFailure()
+            }
+        }
     }
 
-    fun save(tappGroup: TappGroup) {
+    fun save(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "saving group ${tappGroup.id}: ${tappGroup.name}")
         if (tappGroup.id == 0) {
-            create(tappGroup)
+            create(tappGroup, onSuccess, onFailure)
         } else {
-            update(tappGroup)
+            update(tappGroup, onSuccess, onFailure)
         }
     }
 
-    fun create(n: TappGroup) {
-        Log.i("GroupViewModel", "adding group ${n.name}")
-        val temp = TappGroup(
-            _groups.value.size + 2,
-            n.name,
-            n.emoji,
-            n.description,
-            emptyList(),
-            emptyList()
-        )
-        Log.i("GroupViewModel", "TEMP, gave it id ${temp.id}")
-        _groups.value = _groups.value + temp
+    private fun create(new: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        Log.i("GroupViewModel", "creating group ${new.name}")
+        viewModelScope.launch {
+            val response = groupService.createGroup(_token.value!!, new)
+            if (response.isSuccessful) {
+                Log.i(
+                    "GroupViewModel",
+                    "successfully created group ${new.id}: ${new.name}"
+                )
+                _groups.value = _groups.value + response.body()!!
+                onSuccess()
+            } else {
+                Log.e(
+                    "GroupViewModel",
+                    "failed to create group ${new.id}: ${new.name}"
+                )
+                onFailure()
+            }
+        }
     }
 
-    fun update(updatedTappGroup: TappGroup) {
+    private fun update(updatedTappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "updating group ${updatedTappGroup.id}: ${updatedTappGroup.name}")
-        _groups.value = _groups.value.map { group ->
-            if (group.id == updatedTappGroup.id) updatedTappGroup else group
+        viewModelScope.launch {
+            val response =
+                groupService.updateGroup(_token.value!!, updatedTappGroup.id, updatedTappGroup)
+            if (response.isSuccessful) {
+                Log.i(
+                    "GroupViewModel",
+                    "successfully updated group ${updatedTappGroup.id}: ${updatedTappGroup.name}"
+                )
+                _selectedGroup.value = updatedTappGroup
+                onSuccess()
+            } else {
+                Log.e(
+                    "GroupViewModel",
+                    "failed to update group ${updatedTappGroup.id}: ${updatedTappGroup.name}"
+                )
+                onFailure()
+            }
         }
     }
 
