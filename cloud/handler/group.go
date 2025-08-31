@@ -17,11 +17,13 @@ func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 	newGroup, err := model.Deserialize(r.Body, &model.Group{})
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonSerErr)
 		return
 	}
 
 	if !regexGroupName.MatchString(newGroup.Name) {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -35,6 +37,7 @@ func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := db.Save(newGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 
@@ -42,6 +45,7 @@ func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, newGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonSerErr)
 		return
 	}
 }
@@ -62,6 +66,7 @@ func handleGroupList(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, filteredGroups); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonSerErr)
 		return
 	}
 }
@@ -72,6 +77,7 @@ func handleGroupGet(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -93,6 +99,7 @@ func handleGroupGet(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, group); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonSerErr)
 		return
 	}
 }
@@ -103,6 +110,7 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -125,32 +133,39 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 	updatedGroup, err = model.Deserialize(r.Body, &model.Group{})
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonSerErr)
 		return
 	}
 
 	if !regexGroupName.MatchString(updatedGroup.Name) {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
 	// Don't allow changing ownership, complicates things.
 	if updatedGroup.Owner != existingGroup.Owner {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
 	updatedGroup.ID = existingGroup.ID
 	updatedGroup.Name = strings.TrimSpace(updatedGroup.Name)
+	updatedGroup.Members = existingGroup.Members
+	updatedGroup.Invites = existingGroup.Invites
 
 	//nolint:gosec,govet
 	if err := db.Save(updatedGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, updatedGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonSerErr)
 		return
 	}
 }
@@ -161,6 +176,7 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -183,6 +199,7 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := db.Delete(existingGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 }
@@ -193,6 +210,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -214,6 +232,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 	invitedEmail := r.URL.Query().Get("email")
 	if invitedEmail == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -223,6 +242,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 }
@@ -233,6 +253,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -264,6 +285,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 }
@@ -274,6 +296,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -304,6 +327,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 }
@@ -314,6 +338,7 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -335,6 +360,7 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 	kickedEmail := r.URL.Query().Get("email")
 	if kickedEmail == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
@@ -355,6 +381,7 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 }

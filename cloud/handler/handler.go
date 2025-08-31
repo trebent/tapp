@@ -6,6 +6,10 @@ import (
 	"github.com/trebent/zerologr"
 )
 
+var jsonSerErr = []byte(`{"error": "serializer error"}`)
+var jsonFormatErr = []byte(`{"error": "format error"}`)
+var jsonDBErr = []byte(`{"error": "DB error"}`)
+
 func logWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		zerologr.Info(r.Method + " " + r.URL.Path)

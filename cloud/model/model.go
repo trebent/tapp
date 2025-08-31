@@ -16,7 +16,7 @@ type (
 	Group struct {
 		ID      int        `json:"id,omitempty"`
 		Name    string     `json:"name"`
-		Owner   string     `json:"owner"`
+		Owner   string     `json:"owner,omitempty"`
 		Members []*Account `json:"members,omitempty"`
 		Invites []*Account `json:"invites,omitempty"`
 	}
