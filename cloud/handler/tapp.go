@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/trebent/tapp-backend/db"
 	"github.com/trebent/tapp-backend/model"
@@ -12,7 +13,7 @@ import (
 )
 
 func handleTapp(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Path[len("/groups/"):]
+	groupID := strings.Split(r.URL.Path, "/")[2]
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
@@ -64,7 +65,7 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTappGet(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Path[len("/groups/"):]
+	groupID := strings.Split(r.URL.Path, "/")[2]
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {

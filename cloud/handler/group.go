@@ -276,7 +276,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Path[len("/groups/"):]
+	groupID := strings.Split(r.URL.Path, "/")[2]
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
@@ -323,7 +323,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Path[len("/groups/"):]
+	groupID := strings.Split(r.URL.Path, "/")[2]
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
