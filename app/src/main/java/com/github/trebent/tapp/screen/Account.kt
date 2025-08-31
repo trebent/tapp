@@ -169,8 +169,12 @@ fun AccountScreen(
             item(span = { GridItemSpan(4) }) {
                 Button(modifier = Modifier.fillMaxWidth(), onClick = {
                     Log.i("AccountScreen", "clicked the update tag button")
-                    updateTag(tag)
-                    tagSaved = true
+                    updateTag(tag, {
+                        Log.i("AccountScreen", "success updating tag!")
+                        tagSaved = true
+                    }, {
+                        Log.e("AccountScreen", "failed to update tag")
+                    })
                 }, shape = RoundedCornerShape(8.dp)) {
                     Text("Update")
                 }
@@ -366,7 +370,7 @@ fun ConfirmAccountDeleteDialogPreview() {
 fun AccountScreenPreview() {
     AccountScreen(
         MutableStateFlow(Account("", "", "tag")).asStateFlow(),
-        {},
+        { p, s, c -> },
         {},
         {},
         {},

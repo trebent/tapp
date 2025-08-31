@@ -55,6 +55,18 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
             Log.i("AccountViewModel", "initialised account view model")
             _i.value = true
+
+            application.dataStore.data.collect { preferences ->
+                val email = preferences[emailkey]
+                if (email != null) {
+                    _account.value = Account(email, "", null)
+                } else {
+                    _account.value = Account("", "", null)
+                }
+                _token.value = preferences[tokenkey]
+                Log.i("AccountViewModel", "preferences updated token ${_token.value}")
+                Log.i("AccountViewModel", "preferences updated account ${_account.value}")
+            }
         }
     }
 
@@ -107,10 +119,6 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                         Log.i("AccountViewModel", "unable to find authorization token")
                         onFailure()
                     } else {
-
-                        _token.value = newToken
-                        _account.value = Account(email, "", "")
-
                         application.dataStore.edit { preferences ->
                             preferences[tokenkey] = newToken
                             preferences[emailkey] = email
@@ -136,8 +144,6 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                 val response = accountService.logout()
 
                 _loginState.value = false
-                _token.value = null
-                _account.value = Account("", "", null)
 
                 application.dataStore.edit { preferences ->
                     preferences.remove(tokenkey)
@@ -156,7 +162,17 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         Log.i("AccountViewModel", "updating tag to $tag")
 
         viewModelScope.launch {
-            accountService.updateAccount(_ema)
+            val response = accountService.updateAccount(
+                _account.value.email,
+                Account(_account.value.email, "", tag)
+            )
+            if (response.isSuccessful) {
+                Log.e("AccountViewModel", "account tag update succeeded")
+                onSuccess()
+            } else {
+                Log.e("AccountViewModel", "account update call failed")
+                onFailure()
+            }
         }
         _account.value =
             Account(_account.value.email, _account.value.password, tag)

@@ -68,6 +68,11 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
                 "initialised group view model with ${_groups.value.size} groups"
             )
             _i.value = true
+
+            application.dataStore.data.collect { preferences ->
+                _token.value = preferences[tokenkey]
+                Log.i("GroupViewModel", "preference updated token ${_token.value}")
+            }
         }
     }
 
