@@ -1,3 +1,4 @@
+//nolint:errcheck,gosec
 package handler
 
 import (
@@ -8,6 +9,7 @@ import (
 
 	"github.com/trebent/tapp-backend/db"
 	"github.com/trebent/tapp-backend/model"
+	"github.com/trebent/zerologr"
 )
 
 //nolint:gochecknoglobals
@@ -45,7 +47,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if _, err := model.Deserialize(r.Body, &body); err != nil {
+		zerologr.Error(err, "failed to deserialize login request")
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonSerErr)
 		return
 	}
 

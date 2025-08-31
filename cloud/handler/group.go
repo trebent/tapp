@@ -10,6 +10,7 @@ import (
 
 	"github.com/trebent/tapp-backend/db"
 	"github.com/trebent/tapp-backend/model"
+	"github.com/trebent/zerologr"
 )
 
 var regexGroupName = regexp.MustCompile(`^[a-zA-Z0-9 _-]{3,30}$`)
@@ -17,12 +18,14 @@ var regexGroupName = regexp.MustCompile(`^[a-zA-Z0-9 _-]{3,30}$`)
 func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 	newGroup, err := model.Deserialize(r.Body, &model.Group{})
 	if err != nil {
+		zerologr.Error(err, "failed to deserialize group")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonSerErr)
 		return
 	}
 
 	if !regexGroupName.MatchString(newGroup.Name) {
+		zerologr.Error(err, "group name is bad")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -37,6 +40,7 @@ func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 
 	//nolint:gosec,govet
 	if err := db.Save(newGroup); err != nil {
+		zerologr.Error(err, "save new group to DB failed")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return
@@ -45,6 +49,7 @@ func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, newGroup); err != nil {
+		zerologr.Error(err, "failed to write new group to response body")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonSerErr)
 		return
@@ -54,6 +59,7 @@ func handleGroupCreate(w http.ResponseWriter, r *http.Request) {
 func handleGroupList(w http.ResponseWriter, r *http.Request) {
 	groups, err := db.ReadAll[*model.Group]()
 	if err != nil {
+		zerologr.Error(err, "failed to read all groups from DB")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -66,6 +72,7 @@ func handleGroupList(w http.ResponseWriter, r *http.Request) {
 
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, filteredGroups); err != nil {
+		zerologr.Error(err, "failed to write all groups to response body")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonSerErr)
 		return
@@ -77,6 +84,7 @@ func handleGroupGet(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -84,6 +92,7 @@ func handleGroupGet(w http.ResponseWriter, r *http.Request) {
 
 	group, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -93,12 +102,14 @@ func handleGroupGet(w http.ResponseWriter, r *http.Request) {
 		slices.ContainsFunc(group.Members, func(a *model.Account) bool { return a.Email == email })
 
 	if !isMember {
+		zerologr.Error(err, "user is not a member of the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, group); err != nil {
+		zerologr.Error(err, "failed to write group to response body")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonSerErr)
 		return
@@ -110,6 +121,7 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -121,24 +133,28 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 
 	existingGroup, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "existing group not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	email := getUserEmailFromToken(r)
 	if email != existingGroup.Owner {
+		zerologr.Error(err, "user is not the owner of the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	updatedGroup, err = model.Deserialize(r.Body, &model.Group{})
 	if err != nil {
+		zerologr.Error(err, "failed to deserialize the group")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonSerErr)
 		return
 	}
 
 	if !regexGroupName.MatchString(updatedGroup.Name) {
+		zerologr.Error(err, "group name is invalid")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -146,6 +162,7 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// Don't allow changing ownership, complicates things.
 	if updatedGroup.Owner != existingGroup.Owner {
+		zerologr.Error(err, "attempted to change the group owner")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -158,6 +175,7 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 
 	//nolint:gosec,govet
 	if err := db.Save(updatedGroup); err != nil {
+		zerologr.Error(err, "failed to save updated group to DB")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return
@@ -165,6 +183,7 @@ func handleGroupUpdate(w http.ResponseWriter, r *http.Request) {
 
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, updatedGroup); err != nil {
+		zerologr.Error(err, "failed to write updated group to response body")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonSerErr)
 		return
@@ -176,6 +195,7 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -186,12 +206,14 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 
 	existingGroup, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group does not exist")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	email := getUserEmailFromToken(r)
 	if email != existingGroup.Owner {
+		zerologr.Error(err, "user is not the owner of the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -199,6 +221,7 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Delete(existingGroup); err != nil {
+		zerologr.Error(err, "failed to delete group from DB")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return
@@ -210,6 +233,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter into integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -226,12 +250,14 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 
 	email := getUserEmailFromToken(r)
 	if email != existingGroup.Owner {
+		zerologr.Error(err, "user is not the owner of the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	invitedEmail := r.URL.Query().Get("email")
 	if invitedEmail == "" {
+		zerologr.Error(err, "no invitation email found in query parameters")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -242,6 +268,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
+		zerologr.Error(err, "save to DB failed")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return
@@ -253,6 +280,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -263,6 +291,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 
 	existingGroup, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -273,6 +302,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !isInvited {
+		zerologr.Error(err, "user was not invited to the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -285,6 +315,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
+		zerologr.Error(err, "failed to save group to DB")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return
@@ -296,6 +327,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -306,6 +338,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 
 	existingGroup, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -316,6 +349,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !isMember {
+		zerologr.Error(err, "user is not a member of the group")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -327,6 +361,7 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
+		zerologr.Error(err, "saving the group to DB failed")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return
@@ -338,6 +373,7 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -348,18 +384,21 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 
 	existingGroup, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	email := getUserEmailFromToken(r)
 	if email != existingGroup.Owner {
+		zerologr.Error(err, "user is not the group owner")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	kickedEmail := r.URL.Query().Get("email")
 	if kickedEmail == "" {
+		zerologr.Error(err, "no email to kick found in query parameters")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -370,6 +409,7 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 		func(a *model.Account) bool { return a.Email == kickedEmail },
 	)
 	if !foundMember {
+		zerologr.Error(err, "group has no member with that email")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -381,6 +421,7 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
+		zerologr.Error(err, "save group to DB failed")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
 		return

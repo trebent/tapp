@@ -1,3 +1,4 @@
+//nolint:errcheck,gosec
 package handler
 
 import (
@@ -7,6 +8,7 @@ import (
 
 	"github.com/trebent/tapp-backend/db"
 	"github.com/trebent/tapp-backend/model"
+	"github.com/trebent/zerologr"
 )
 
 func handleTapp(w http.ResponseWriter, r *http.Request) {
@@ -14,12 +16,15 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
 	group, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group to tapp not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -29,6 +34,7 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 	isMember := email == group.Owner ||
 		slices.ContainsFunc(group.Members, func(a *model.Account) bool { return a.Email == email })
 	if !isMember {
+		zerologr.Error(err, "user is not a member of the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -45,7 +51,9 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Save(newTapp); err != nil {
+		zerologr.Error(err, "failed to save tapp to DB")
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 
@@ -60,12 +68,15 @@ func handleTappGet(w http.ResponseWriter, r *http.Request) {
 
 	i, err := strconv.Atoi(groupID)
 	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
 		return
 	}
 
 	group, err := db.Read(&model.Group{ID: i})
 	if err != nil {
+		zerologr.Error(err, "group not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -75,19 +86,26 @@ func handleTappGet(w http.ResponseWriter, r *http.Request) {
 	isMember := email == group.Owner ||
 		slices.ContainsFunc(group.Members, func(a *model.Account) bool { return a.Email == email })
 	if !isMember {
+		zerologr.Error(err, "user is not a member of the group")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	tapps, err := db.ReadAll[*model.Tapp]()
 	if err != nil {
+		zerologr.Error(err, "failed to read all tapps from DB")
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
 		return
 	}
 
+	tapps = slices.DeleteFunc(tapps, func(t *model.Tapp) bool { return t.GroupID != group.ID })
+
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, tapps); err != nil {
+		zerologr.Error(err, "failed to serialize tapps")
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonSerErr)
 		return
 	}
 }
