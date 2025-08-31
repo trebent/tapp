@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.trebent.tapp.api.Account
+import com.github.trebent.tapp.api.groupService
 import com.github.trebent.tapp.dataStore
 import com.github.trebent.tapp.tokenkey
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,7 +62,10 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             if (_token.value != null) {
                 Log.i("GroupViewModel", "found token, fetching groups")
 
-
+                val response = groupService.listGroups(_token.value!!)
+                if (response.isSuccessful) {
+                    response.body()
+                }
             }
 
             Log.i("GroupViewModel", "initialised account view model")
