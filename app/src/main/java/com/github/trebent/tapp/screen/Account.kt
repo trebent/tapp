@@ -57,7 +57,7 @@ fun AccountScreenRoute(
     Log.i("AccountScreenRoute", "navigated")
     AccountScreen(
         accountViewModel.account,
-        { tag -> accountViewModel.updateTag(tag) },
+        { tag, s, f -> accountViewModel.updateTag(tag, s, f) },
         { password -> accountViewModel.updatePassword(password) },
         { accountViewModel.deleteAccount() },
         { o -> accountViewModel.logout(o) },
@@ -70,7 +70,7 @@ fun AccountScreenRoute(
 @Composable
 fun AccountScreen(
     account: StateFlow<Account>,
-    updateTag: (String) -> Unit,
+    updateTag: (String, () -> Unit, () -> Unit) -> Unit,
     updatePassword: (String) -> Unit,
     deleteAccount: () -> Unit,
     logout: (onDone: () -> Unit) -> Unit,

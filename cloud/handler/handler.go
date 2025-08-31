@@ -43,6 +43,24 @@ func Handler() http.Handler {
 		handleAccountCreate(w, r)
 	})
 
+	mux.HandleFunc("/password", func(w http.ResponseWriter, r *http.Request) {
+		// POST
+		if r.Body != nil {
+			defer r.Body.Close()
+		}
+
+		if !authenticated(w, r) {
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		handlePasswordUpdate(w, r)
+	})
+
 	mux.HandleFunc("/accounts/{email}", func(w http.ResponseWriter, r *http.Request) {
 		// GET, PUT, DELETE
 		if r.Body != nil {

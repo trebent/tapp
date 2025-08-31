@@ -152,8 +152,12 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun updateTag(tag: String) {
+    fun updateTag(tag: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "updating tag to $tag")
+
+        viewModelScope.launch {
+            accountService.updateAccount()
+        }
         _account.value =
             Account(_account.value.email, _account.value.password, tag)
     }

@@ -43,7 +43,6 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     private val _selectedGroup = MutableStateFlow(newTappGroup)
 
     val initialised = _i.asStateFlow()
-    val fetched = _fetched.asStateFlow()
     val selectedGroup = _selectedGroup.asStateFlow()
 
     init {

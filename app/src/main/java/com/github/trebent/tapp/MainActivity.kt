@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -57,7 +58,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            TappTheme { Main(accountViewModel, tappGroupViewModel) }
+            TappTheme {
+                val authReady by accountViewModel.initialised.collectAsState()
+                val groupsReady by tappGroupViewModel.initialised.collectAsState()
+
+                if (!authReady || !groupsReady) {
+                    // Show nothing (SplashScreen still visible)
+                    Box(modifier = Modifier.fillMaxSize()) {}
+                } else {
+                    // Only show your main UI after both view models are ready
+                    Main(accountViewModel, tappGroupViewModel)
+                }
+            }
         }
     }
 }

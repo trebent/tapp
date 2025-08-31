@@ -115,16 +115,10 @@ func handleAccountUpdate(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonSerErr)
 		return
 	}
+	updatedAccount.Password = existingAccount.Password
 
 	if existingAccount.Email != updatedAccount.Email {
 		zerologr.Error(err, "user tried to update email")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonFormatErr)
-		return
-	}
-
-	if !regexpPassword.MatchString(updatedAccount.Password) {
-		zerologr.Error(err, "password format is bad")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonFormatErr)
 		return
@@ -162,6 +156,43 @@ func handleAccountUpdate(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonSerErr)
 		return
 	}
+}
+
+func handlePasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	email := getUserEmailFromToken(r)
+
+	existingAccount, err := db.Read(&model.Account{Email: email})
+	if err != nil {
+		zerologr.Error(err, "account not found")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	acc := &model.Account{}
+	if _, err := model.Deserialize(r.Body, &acc); err != nil {
+		zerologr.Error(err, "failed to unmarshal password body")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonSerErr)
+	}
+
+	if !regexpPassword.MatchString(acc.Password) {
+		zerologr.Error(err, "password format incorrect")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
+		return
+	}
+
+	existingAccount.Password = acc.Password
+
+	//nolint:gosec,govet
+	if err := db.Save(existingAccount); err != nil {
+		zerologr.Error(err, "failed to save updated account to DB")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func handleAccountDelete(w http.ResponseWriter, r *http.Request) {
