@@ -7,8 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
-import com.github.trebent.tapp.BuildConfig
 import com.github.trebent.tapp.api.Account
+import com.github.trebent.tapp.api.ChangePasswordRequest
 import com.github.trebent.tapp.api.LoginRequest
 import com.github.trebent.tapp.api.accountService
 import com.github.trebent.tapp.dataStore
@@ -21,9 +21,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
-const val testUsername = "u"
-var testPassword = "p"
-
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
     private val _loginState = MutableStateFlow(false)
 
@@ -34,7 +31,6 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
     val isLoggedIn = _loginState.asStateFlow()
     val initialised = _i.asStateFlow()
-    val account: StateFlow<Account> = _account.asStateFlow()
 
     init {
         Log.i("AccountViewModel", "initialising the auth view model")
@@ -53,13 +49,22 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                 _loginState.value = true
             }
 
+            if (_loginState.value) {
+                val response = accountService.getAccount(_token.value!!, _account.value.email)
+                if (response.isSuccessful) {
+                    Log.i("AccountViewModel", "successfully fetched account ${response.body()}")
+                    _account.value = Account(_account.value.email, "", response.body()!!.tag)
+                }
+            }
+
             Log.i("AccountViewModel", "initialised account view model")
             _i.value = true
 
             application.dataStore.data.collect { preferences ->
+                Log.i("AccountViewModel", "preferences $preferences")
                 val email = preferences[emailkey]
                 if (email != null) {
-                    _account.value = Account(email, "", null)
+                    _account.value = Account(email, "", _account.value.tag)
                 } else {
                     _account.value = Account("", "", null)
                 }
@@ -68,6 +73,20 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                 Log.i("AccountViewModel", "preferences updated account ${_account.value}")
             }
         }
+    }
+
+    fun getAccount(): StateFlow<Account> {
+        viewModelScope.launch {
+            val response = accountService.getAccount(_token.value!!, _account.value.email)
+            if (response.isSuccessful) {
+                _account.value = Account(_account.value.email, "", response.body()?.tag)
+                Log.i("AccountViewModel", "fetched account successfully ${_account.value}")
+            } else {
+                Log.e("AccountViewModel", "failed to fetch account")
+            }
+        }
+
+        return _account
     }
 
     fun signup(
@@ -106,55 +125,46 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         onSuccess: () -> Unit,
         onFailure: () -> Unit
     ) {
-        if (BuildConfig.TAPP_TEST_MODE && email == testUsername && password == testPassword) {
-            Log.i("AccountViewModel", "login succeeded")
-            _loginState.value = true
-        } else {
-            viewModelScope.launch {
-                val response = accountService.login(LoginRequest(email, password))
-                if (response.isSuccessful) {
-                    _loginState.value = true
-                    val newToken = response.headers()["Authorization"]
-                    if (newToken == null) {
-                        Log.i("AccountViewModel", "unable to find authorization token")
-                        onFailure()
-                    } else {
-                        application.dataStore.edit { preferences ->
-                            preferences[tokenkey] = newToken
-                            preferences[emailkey] = email
-                        }
-
-                        onSuccess()
-                    }
-                    onSuccess()
-                } else {
+        viewModelScope.launch {
+            val response = accountService.login(LoginRequest(email, password))
+            if (response.isSuccessful) {
+                _loginState.value = true
+                val newToken = response.headers()["Authorization"]
+                if (newToken == null) {
+                    Log.i("AccountViewModel", "unable to find authorization token")
                     onFailure()
+                } else {
+                    application.dataStore.edit { preferences ->
+                        preferences[tokenkey] = newToken
+                        preferences[emailkey] = email
+                    }
+
+                    onSuccess()
                 }
+                onSuccess()
+            } else {
+                onFailure()
             }
         }
     }
 
     fun logout(onDone: () -> Unit) {
         Log.i("AccountViewModel", "logout")
-        if (BuildConfig.TAPP_TEST_MODE) {
-            Log.i("AccountViewModel", "test mode, skip API call")
+
+        viewModelScope.launch {
+            val response = accountService.logout(_token.value!!)
+
             _loginState.value = false
-        } else {
-            viewModelScope.launch {
-                val response = accountService.logout()
 
-                _loginState.value = false
-
-                application.dataStore.edit { preferences ->
-                    preferences.remove(tokenkey)
-                    preferences.remove(emailkey)
-                }
-
-                if (!response.isSuccessful) {
-                    Log.i("AccountViewModel", "logout call failed!")
-                }
-                onDone()
+            application.dataStore.edit { preferences ->
+                preferences.remove(tokenkey)
+                preferences.remove(emailkey)
             }
+
+            if (!response.isSuccessful) {
+                Log.i("AccountViewModel", "logout call failed!")
+            }
+            onDone()
         }
     }
 
@@ -163,31 +173,49 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
         viewModelScope.launch {
             val response = accountService.updateAccount(
+                _token.value!!,
                 _account.value.email,
                 Account(_account.value.email, "", tag)
             )
             if (response.isSuccessful) {
-                Log.e("AccountViewModel", "account tag update succeeded")
+                Log.i("AccountViewModel", "account tag update succeeded")
+                _account.value =
+                    Account(_account.value.email, "", tag)
                 onSuccess()
             } else {
                 Log.e("AccountViewModel", "account update call failed")
                 onFailure()
             }
         }
-        _account.value =
-            Account(_account.value.email, _account.value.password, tag)
     }
 
-    fun updatePassword(password: String) {
+    fun updatePassword(password: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "updating password")
-        if (BuildConfig.TAPP_TEST_MODE) {
-            Log.d("AccountViewModel", "set test password")
-            testPassword = password
+        viewModelScope.launch {
+            val response =
+                accountService.updatePassword(_token.value!!, ChangePasswordRequest(password))
+            if (response.isSuccessful) {
+                Log.i("AccountViewModel", "successfully updated the password!")
+                onSuccess()
+            } else {
+                Log.i("AccountViewModel", "failed to update the password")
+                onFailure()
+            }
         }
     }
 
-    fun deleteAccount() {
-        Log.i("AccountViewModel", "deleting account")
-        _loginState.value = false
+    fun deleteAccount(onSuccess: () -> Unit, onFailure: () -> Unit) {
+        Log.i("AccountViewModel", "deleting account ${_account.value.email}")
+        viewModelScope.launch {
+            val response =
+                accountService.deleteAccount(_token.value!!, _account.value.email)
+            if (response.isSuccessful) {
+                Log.i("AccountViewModel", "successfully deleted the account!")
+                logout { onSuccess() }
+            } else {
+                Log.e("AccountViewModel", "failed to delete the account")
+                onFailure()
+            }
+        }
     }
 }

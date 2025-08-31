@@ -38,7 +38,6 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
-    private val _fetched = MutableStateFlow(false)
     private val _token = MutableStateFlow<String?>(null)
     private val _selectedGroup = MutableStateFlow(newTappGroup)
 
@@ -53,39 +52,24 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             val preferences = application.dataStore.data.first()
             _token.value = preferences[tokenkey]
 
-            if (_token.value != null) {
-                Log.i("GroupViewModel", "found token, fetching groups")
-
-                val response = groupService.listGroups(_token.value!!)
-                if (response.isSuccessful) {
-                    updateGroups(response.body()!!)
-                    _fetched.value = true
-                }
-            }
-
-            Log.i(
-                "GroupViewModel",
-                "initialised group view model with ${_groups.value.size} groups"
-            )
             _i.value = true
 
             application.dataStore.data.collect { preferences ->
+                Log.i("GroupViewModel", "preferences $preferences")
                 _token.value = preferences[tokenkey]
-                Log.i("GroupViewModel", "preference updated token ${_token.value}")
+                Log.i("GroupViewModel", "preferences updated token ${_token.value}")
             }
         }
     }
 
     fun list(): StateFlow<List<TappGroup>> {
         Log.i("GroupViewModel", "listing groups")
-        if (!_fetched.value) {
-            viewModelScope.launch {
-                val response = groupService.listGroups(_token.value!!)
-                if (response.isSuccessful) {
-                    updateGroups(response.body()!!)
-                } else {
-                    Log.e("GroupViewModel", "failed to fetch groups!")
-                }
+        viewModelScope.launch {
+            val response = groupService.listGroups(_token.value!!)
+            if (response.isSuccessful) {
+                updateGroups(response.body()!!)
+            } else {
+                Log.e("GroupViewModel", "failed to fetch groups!")
             }
         }
 
@@ -140,6 +124,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     }
 
     private fun updateGroups(remoteGroups: List<TappGroup>) {
+        Log.i("GroupViewModel", "setting ${remoteGroups.size} groups")
         _groups.value = remoteGroups
     }
 }

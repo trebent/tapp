@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,10 +57,10 @@ fun AccountScreenRoute(
 ) {
     Log.i("AccountScreenRoute", "navigated")
     AccountScreen(
-        accountViewModel.account,
+        accountViewModel.getAccount(),
         { tag, s, f -> accountViewModel.updateTag(tag, s, f) },
-        { password -> accountViewModel.updatePassword(password) },
-        { accountViewModel.deleteAccount() },
+        { password, s, f -> accountViewModel.updatePassword(password, s, f) },
+        { s, f -> accountViewModel.deleteAccount(s, f) },
         { o -> accountViewModel.logout(o) },
         goToLogin,
         goBack
@@ -71,15 +72,18 @@ fun AccountScreenRoute(
 fun AccountScreen(
     account: StateFlow<Account>,
     updateTag: (String, () -> Unit, () -> Unit) -> Unit,
-    updatePassword: (String) -> Unit,
-    deleteAccount: () -> Unit,
+    updatePassword: (String, () -> Unit, () -> Unit) -> Unit,
+    deleteAccount: (() -> Unit, () -> Unit) -> Unit,
     logout: (onDone: () -> Unit) -> Unit,
     goToLogin: () -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("AccountScreen", "rendering")
 
-    var tag by rememberSaveable { mutableStateOf(account.value.tag ?: "") }
+    val accountState by account.collectAsState()
+    var tag by rememberSaveable(accountState.tag) {
+        mutableStateOf(accountState.tag ?: "")
+    }
     var tagError by rememberSaveable { mutableStateOf(false) }
     var tagSaved by rememberSaveable { mutableStateOf(false) }
 
@@ -149,7 +153,7 @@ fun AccountScreen(
             if (tagError) {
                 item(span = { GridItemSpan(4) }) {
                     Text(
-                        text = "failed to update tag",
+                        text = "that tag is already taken",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -174,6 +178,7 @@ fun AccountScreen(
                         tagSaved = true
                     }, {
                         Log.e("AccountScreen", "failed to update tag")
+                        tagError = true
                     })
                 }, shape = RoundedCornerShape(8.dp)) {
                     Text("Update")
@@ -258,11 +263,17 @@ fun AccountScreen(
                     if (password.isEmpty() || repeatPassword.isEmpty() || (password != repeatPassword) || (password.length < 6 || password.length > 25)) {
                         passwordError = true
                     } else {
-                        updatePassword(password)
-                        password = ""
-                        repeatPassword = ""
-                        passwordError = false
-                        passwordSaved = true
+                        updatePassword(password, {
+                            Log.i("AccountScreen", "updated password successfully")
+                            password = ""
+                            repeatPassword = ""
+                            passwordError = false
+                            passwordSaved = true
+                        }, {
+                            Log.e("AccountScreen", "password update failed")
+                            passwordError = false
+                        })
+
                     }
 
                 }, shape = RoundedCornerShape(8.dp)) {
@@ -309,7 +320,7 @@ fun AccountScreen(
 @Composable
 fun ConfirmAccountDeleteDialog(
     onDismiss: () -> Unit,
-    deleteAccount: () -> Unit,
+    deleteAccount: (() -> Unit, () -> Unit) -> Unit,
     goToLogin: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -320,7 +331,7 @@ fun ConfirmAccountDeleteDialog(
 @Composable
 fun ConfirmAccountDeleteContent(
     onDismiss: () -> Unit,
-    deleteAccount: () -> Unit,
+    deleteAccount: (() -> Unit, () -> Unit) -> Unit,
     goToLogin: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -348,9 +359,14 @@ fun ConfirmAccountDeleteContent(
                 Text("Cancel")
             }
             Button(onClick = {
-                deleteAccount()
-                goToLogin()
-                onDismiss()
+                deleteAccount({
+                    Log.i("ConfirmAccountDeleteDialog", "successfully deleted account")
+                    goToLogin()
+                    onDismiss()
+                }, {
+                    Log.e("ConfirmAccountDeleteDialog", "failed to delete account")
+                })
+
             }, shape = RoundedCornerShape(8.dp), modifier = Modifier.padding(8.dp)) {
                 Text("Confirm")
             }
@@ -361,7 +377,7 @@ fun ConfirmAccountDeleteContent(
 @Preview
 @Composable
 fun ConfirmAccountDeleteDialogPreview() {
-    ConfirmAccountDeleteContent({}, {}, {})
+    ConfirmAccountDeleteContent({}, { s, f -> }, {})
 }
 
 @ExperimentalMaterial3Api
@@ -370,9 +386,9 @@ fun ConfirmAccountDeleteDialogPreview() {
 fun AccountScreenPreview() {
     AccountScreen(
         MutableStateFlow(Account("", "", "tag")).asStateFlow(),
-        { p, s, c -> },
-        {},
-        {},
+        { t, s, f -> },
+        { p, s, f -> },
+        { s, f -> },
         {},
         {},
         {})

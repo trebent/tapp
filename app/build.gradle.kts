@@ -23,7 +23,6 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("boolean", "TAPP_TEST_MODE", "false")
             buildConfigField(
                 "String",
                 "TAPP_API_ENDPOINT",
@@ -31,7 +30,6 @@ android {
             )
         }
         release {
-            buildConfigField("boolean", "TAPP_TEST_MODE", "false")
             buildConfigField(
                 "String",
                 "TAPP_API_ENDPOINT",
