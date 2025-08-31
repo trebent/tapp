@@ -45,6 +45,7 @@ func Deserialize[T any](reader io.Reader, target T) (T, error) {
 	if err != nil {
 		return target, err
 	}
+	//nolint:gosec,govet
 	if err := json.Unmarshal(data, target); err != nil {
 		return target, err
 	}

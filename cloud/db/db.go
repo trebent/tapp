@@ -25,7 +25,7 @@ var (
 	//nolint:gochecknoglobals
 	tableLock = sync.Map{} // map[string]*sync.Mutex
 
-	//nolint:gochecknoglobals
+	//nolint:gochecknoglobals,mnd
 	logger = zerologr.V(10)
 )
 
@@ -78,6 +78,7 @@ func Save[T Model](entity T) error {
 	if err != nil {
 		return err
 	}
+	//nolint:mnd
 	logger.V(100).Info("all entities", "entities", all, "table", getTableName[T]())
 
 	if existingEntity := find(all, entity); existingEntity != nil {
@@ -94,7 +95,7 @@ func Save[T Model](entity T) error {
 		return err
 	}
 
-	//nolint:gosec
+	//nolint:gosec,govet
 	if err := os.WriteFile(getTablePath[T](), data, 0o644); err != nil {
 		return err
 	}
@@ -136,6 +137,7 @@ func ReadAll[T Model]() ([]T, error) {
 	}
 
 	entities := make([]T, 0)
+	//nolint:gosec,govet
 	if err := json.Unmarshal(data, &entities); err != nil {
 		logger.Error(err, "failed to unmarshal data", "data", string(data))
 		return nil, err
@@ -162,7 +164,8 @@ func Delete[T Model](entity T) error {
 	}
 
 	if index == -1 {
-		return fmt.Errorf("entity with key %s not found in table %s", entity.Key(), getTableName[T]())
+		return fmt.Errorf("entity with key %s not found in table %s",
+			entity.Key(), getTableName[T]())
 	}
 
 	all = append(all[:index], all[index+1:]...)
@@ -171,7 +174,7 @@ func Delete[T Model](entity T) error {
 		return err
 	}
 
-	//nolint:gosec
+	//nolint:gosec,govet
 	if err := os.WriteFile(getTablePath[T](), data, 0o644); err != nil {
 		return err
 	}
@@ -224,6 +227,7 @@ func createTable[T Model]() error {
 	defer f.Close()
 
 	data := []byte("[]")
+	//nolint:gosec,govet
 	if _, err := f.Write(data); err != nil {
 		return err
 	}

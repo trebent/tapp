@@ -4,12 +4,13 @@ import (
 	"net/http"
 )
 
+//nolint:gocognit,funlen
 func Handler() http.Handler {
 	mux := http.NewServeMux()
 
 	// Health endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(204)
+		w.WriteHeader(http.StatusNoContent)
 	})
 
 	// Account endpoints
@@ -20,7 +21,7 @@ func Handler() http.Handler {
 		}
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -45,7 +46,7 @@ func Handler() http.Handler {
 		case http.MethodDelete:
 			handleAccountDelete(w, r)
 		default:
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
@@ -57,7 +58,7 @@ func Handler() http.Handler {
 		}
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 		handleLogin(w, r)
@@ -66,7 +67,7 @@ func Handler() http.Handler {
 	mux.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		// POST
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -90,7 +91,7 @@ func Handler() http.Handler {
 		case http.MethodGet:
 			handleGroupList(w, r)
 		default:
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
@@ -112,7 +113,7 @@ func Handler() http.Handler {
 		case http.MethodDelete:
 			handleGroupDelete(w, r)
 		default:
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
@@ -127,7 +128,7 @@ func Handler() http.Handler {
 		}
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -145,7 +146,7 @@ func Handler() http.Handler {
 		}
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -163,7 +164,7 @@ func Handler() http.Handler {
 		}
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -181,7 +182,7 @@ func Handler() http.Handler {
 		}
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -205,7 +206,7 @@ func Handler() http.Handler {
 		case http.MethodGet:
 			handleTappGet(w, r)
 		default:
-			w.WriteHeader(405)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 	return mux

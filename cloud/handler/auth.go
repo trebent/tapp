@@ -13,9 +13,11 @@ import (
 //nolint:gochecknoglobals
 var authMap = sync.Map{}
 
+const hashSize = 16
+
 func authenticated(w http.ResponseWriter, r *http.Request) bool {
 	if getUserEmailFromToken(r) == "" {
-		w.WriteHeader(401)
+		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
 
@@ -43,18 +45,18 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if _, err := model.Deserialize(r.Body, &body); err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	account, err := db.Read(&model.Account{Email: body.Email})
 	if err != nil {
-		w.WriteHeader(401)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	if account.Password != body.Password {
-		w.WriteHeader(401)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -72,7 +74,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func newHash() string {
-	b := make([]byte, 16)
+	b := make([]byte, hashSize)
 	_, err := rand.Read(b)
 	if err != nil {
 		panic(err)
