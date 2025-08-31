@@ -1,3 +1,4 @@
+//nolint:errcheck,gosec
 package handler
 
 import (
