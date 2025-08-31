@@ -52,9 +52,11 @@ func NextID[T Model]() int {
 	val, _ := idMap.LoadOrStore(tableName, 0)
 
 	if val == 0 {
+		zerologr.Info("next ID value for table was empty, initialising", "table", tableName)
 		//nolint:errcheck
 		es, _ := ReadAll[T]()
 		val = len(es)
+		zerologr.Info("next ID set", "next", val)
 	}
 
 	//nolint:errcheck
