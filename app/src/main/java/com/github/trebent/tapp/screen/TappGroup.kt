@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.github.trebent.tapp.viewmodel.TappGroup
+import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.newTappGroup
 import com.github.trebent.tapp.viewmodel.testGroup

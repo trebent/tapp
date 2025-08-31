@@ -11,8 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 const val testUsername = "u"
 var testPassword = "p"
 
-
-class AuthViewModel() : ViewModel() {
+class AccountViewModel() : ViewModel() {
     private val _loginState = MutableStateFlow(false)
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.

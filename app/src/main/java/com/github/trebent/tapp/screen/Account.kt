@@ -41,21 +41,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.github.trebent.tapp.viewmodel.AuthViewModel
+import com.github.trebent.tapp.viewmodel.AccountViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 @ExperimentalMaterial3Api
 @Composable
-fun AccountScreenRoute(authViewModel: AuthViewModel, goToLogin: () -> Unit, goBack: () -> Unit) {
+fun AccountScreenRoute(
+    accountViewModel: AccountViewModel,
+    goToLogin: () -> Unit,
+    goBack: () -> Unit
+) {
     Log.i("AccountScreenRoute", "navigated")
     AccountScreen(
-        authViewModel.tag,
-        { tag -> authViewModel.updateTag(tag) },
-        { password -> authViewModel.updatePassword(password) },
-        { authViewModel.deleteAccount() },
-        { authViewModel.logout() },
+        accountViewModel.tag,
+        { tag -> accountViewModel.updateTag(tag) },
+        { password -> accountViewModel.updatePassword(password) },
+        { accountViewModel.deleteAccount() },
+        { accountViewModel.logout() },
         goToLogin,
         goBack
     )

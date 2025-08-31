@@ -2,19 +2,10 @@ package com.github.trebent.tapp.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.github.trebent.tapp.api.TappGroup
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.serialization.Serializable
 
-
-@Serializable
-data class TappGroup(
-    val id: Int,
-    val name: String,
-    val emoji: String,
-    val description: String,
-    var edit: Boolean
-)
 
 val newTappGroup = TappGroup(0, "", "", "", true)
 val testGroup = TappGroup(12, "group name", "❤️", "group description", false)

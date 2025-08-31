@@ -24,9 +24,19 @@ android {
     buildTypes {
         debug {
             buildConfigField("boolean", "TAPP_TEST_MODE", "true")
+            buildConfigField(
+                "String",
+                "TAPP_API_ENDPOINT",
+                "\"https://tapp-251239774029.europe-west1.run.app\""
+            )
         }
         release {
             buildConfigField("boolean", "TAPP_TEST_MODE", "false")
+            buildConfigField(
+                "String",
+                "TAPP_API_ENDPOINT",
+                "\"https://tapp-251239774029.europe-west1.run.app\""
+            )
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -65,6 +75,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.com.squareup.retrofit2)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

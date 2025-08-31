@@ -30,7 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.github.trebent.tapp.R
-import com.github.trebent.tapp.viewmodel.TappGroup
+import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.newTappGroup
 import com.github.trebent.tapp.viewmodel.testGroups

@@ -35,7 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.github.trebent.tapp.viewmodel.AuthViewModel
+import com.github.trebent.tapp.viewmodel.AccountViewModel
 
 
 val emailRegex = Regex("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
@@ -43,13 +43,13 @@ val emailRegex = Regex("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
 
 @Composable
 fun SignupScreenRoute(
-    authViewModel: AuthViewModel,
+    accountViewModel: AccountViewModel,
     onCancel: () -> Unit,
     onSignedUp: () -> Unit
 ) {
     Log.i("SignupScreenRoute", "navigated")
 
-    SignupScreen({ t, e, p -> authViewModel.signup(t, e, p) }, onCancel, onSignedUp)
+    SignupScreen({ t, e, p -> accountViewModel.signup(t, e, p) }, onCancel, onSignedUp)
 }
 
 @Composable
@@ -246,13 +246,13 @@ fun SignupScreenPreview() {
 
 @Composable
 fun LoginScreenRoute(
-    authViewModel: AuthViewModel,
+    accountViewModel: AccountViewModel,
     onSignup: () -> Unit,
     onLogin: () -> Unit
 ) {
     Log.i("LoginScreenRoute", "navigated")
 
-    LoginScreen({ u, p -> authViewModel.login(u, p) }, onSignup, onLogin)
+    LoginScreen({ u, p -> accountViewModel.login(u, p) }, onSignup, onLogin)
 }
 
 @Composable

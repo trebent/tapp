@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.screen.AccountScreenRoute
 import com.github.trebent.tapp.screen.EditTappGroupScreenRoute
 import com.github.trebent.tapp.screen.HomeScreenRoute
@@ -26,35 +27,34 @@ import com.github.trebent.tapp.screen.LoginScreenRoute
 import com.github.trebent.tapp.screen.SignupScreenRoute
 import com.github.trebent.tapp.screen.TappGroupScreenRoute
 import com.github.trebent.tapp.ui.theme.TappTheme
-import com.github.trebent.tapp.viewmodel.AuthViewModel
-import com.github.trebent.tapp.viewmodel.TappGroup
+import com.github.trebent.tapp.viewmodel.AccountViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 
 
 class MainActivity : ComponentActivity() {
 
-    private val authViewModel: AuthViewModel by viewModels()
+    private val accountViewModel: AccountViewModel by viewModels()
     private val tappGroupViewModel: TappGroupViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Keep the splash as long as the auth view model needs to do its cloud sync.
         val splash = installSplashScreen()
         splash.setKeepOnScreenCondition {
-            !authViewModel.initialised.value && !tappGroupViewModel.initialised.value
+            !accountViewModel.initialised.value && !tappGroupViewModel.initialised.value
         }
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
-            TappTheme { Main(authViewModel, tappGroupViewModel) }
+            TappTheme { Main(accountViewModel, tappGroupViewModel) }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
+fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewModel) {
     Log.i("Main", "main compose entrypoint")
     val navController = rememberNavController()
 
@@ -77,7 +77,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
         ) {
             composable("splash") { SplashScreen() }
             composable("account") {
-                AccountScreenRoute(authViewModel, goToLogin, goBack)
+                AccountScreenRoute(accountViewModel, goToLogin, goBack)
             }
             composable("home") {
                 HomeScreenRoute(
@@ -107,7 +107,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
             }
             composable("login") {
                 LoginScreenRoute(
-                    authViewModel,
+                    accountViewModel,
                     { navController.navigate("signup") },
                     {
                         navController.navigate("home") {
@@ -119,7 +119,7 @@ fun Main(authViewModel: AuthViewModel, tappGroupViewModel: TappGroupViewModel) {
             }
             composable("signup") {
                 SignupScreenRoute(
-                    authViewModel,
+                    accountViewModel,
                     { navController.navigate("login") }
                 ) { navController.navigate("login") }
             }
