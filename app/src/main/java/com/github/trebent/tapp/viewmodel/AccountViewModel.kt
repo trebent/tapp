@@ -268,7 +268,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
             // Send token to backend
             viewModelScope.launch {
-                val response = accountService.pushFCM(token, _account.value.email)
+                val response = accountService.pushFCM(token, _token.value)
                 if (response.isSuccessful) {
                     Log.i("AccountViewModel", "sent FCM successfully")
                 } else {

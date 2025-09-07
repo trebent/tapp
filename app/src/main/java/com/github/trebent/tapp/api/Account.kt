@@ -58,5 +58,8 @@ interface AccountService {
     suspend fun logout(@Header("Authorization") token: String): Response<Unit>
 
     @PUT("/fcm")
-    suspend fun pushFCM(@Header("X-fcm-token") fcm: String): Response<Unit>
+    suspend fun pushFCM(
+        @Header("X-fcm-token") fcm: String,
+        @Header("Authorization") token: String
+    ): Response<Unit>
 }

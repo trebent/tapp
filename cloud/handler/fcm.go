@@ -12,5 +12,5 @@ func handleFCMUpdate(w http.ResponseWriter, r *http.Request) {
 
 	firebase.Add(email, fcm)
 
-	w.WriteHeader(204)
+	w.WriteHeader(http.StatusNoContent)
 }
