@@ -730,7 +730,7 @@ fun TappGroupScreen(
                         {
                             Log.i(
                                 "TappGroupScreen",
-                                "tapped!!! ${selectedGroup.value.id}: ${selectedGroup.value.name}"
+                                "tapped! ${selectedGroup.value.id}: ${selectedGroup.value.name}"
                             )
                             onTapp()
                         },
@@ -784,7 +784,7 @@ fun TappGroupScreen(
                     // Content below the tabs
                     when (currentTabIndex) {
                         0 ->
-                            if (selectedGroup.value.memberCount() == 0) {
+                            if (tapps.value.isEmpty()) {
                                 Text(
                                     text = "There are no tapps yet, get tapping!",
                                     textAlign = TextAlign.Center,

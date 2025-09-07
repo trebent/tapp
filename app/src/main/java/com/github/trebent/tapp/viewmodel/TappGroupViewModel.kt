@@ -117,9 +117,16 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         val t = Tapp(selectedGroup.value.id, System.currentTimeMillis(), a)
         _tapps.value = listOf(t) + _tapps.value
         viewModelScope.launch {
-            val response = groupService.createTapp(_tokenGetter(), selectedGroup.value.id)
-            if (!response.isSuccessful) {
-                Log.e("GroupViewModel", "failed to tapp group ${selectedGroup.value.id}")
+            try {
+                val response = groupService.createTapp(_tokenGetter(), selectedGroup.value.id)
+                if (!response.isSuccessful) {
+                    Log.e("GroupViewModel", "failed to tapp group ${selectedGroup.value.id}")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
     }

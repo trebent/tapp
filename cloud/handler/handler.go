@@ -39,19 +39,26 @@ func Handler() http.Handler {
 			return
 		}
 
-		accounts, _ := db.ReadAll[*model.Account]()
-		groups, _ := db.ReadAll[*model.Group]()
+		summary := struct {
+			Accounts         []*model.Account         `json:"accounts"`
+			Groups           *model.Group             `json:"groups"`
+			TappsByGroupName map[string][]*model.Tapp `json:"tapps_by_group_name"`
+			Invites          []*model.Invitation      `json:"invitations"`
+		}{}
 
+		accounts, _ := db.ReadAll[*model.Account]()
+		summary.Accounts = accounts
+
+		groups, _ := db.ReadAll[*model.Group]()
 		for _, group := range groups {
-			_ = model.WriteJSON(w, group)
 			tapps, _ := db.SimpleRead(&model.Tapp{GroupID: group.ID})
-			_ = model.WriteJSON(w, tapps)
+			summary.TappsByGroupName[group.Name] = tapps
 		}
 
 		invites, _ := db.ReadAll[*model.Invitation]()
+		summary.Invites = invites
 
-		_ = model.WriteJSON(w, accounts)
-		_ = model.WriteJSON(w, invites)
+		_ = model.WriteJSON(w, summary)
 	})
 
 	mux.HandleFunc("/admin/clear", func(w http.ResponseWriter, r *http.Request) {
