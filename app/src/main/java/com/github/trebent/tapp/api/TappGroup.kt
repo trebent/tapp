@@ -20,7 +20,9 @@ data class TappGroup(
     val description: String?,
     val members: List<Account>?,
     val invites: List<Account>?,
-)
+) {
+    fun memberCount(): Int = members?.size ?: 0
+}
 
 data class TappGroupInvitation(
     @SerializedName("group_id") val groupId: Int,

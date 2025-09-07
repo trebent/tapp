@@ -140,6 +140,9 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             if (response.isSuccessful) {
                 onSuccess()
                 removeInvitation(invite.groupId)
+
+                // Trigger group-listing
+                list()
             } else {
                 Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
                 onFailure()
@@ -172,7 +175,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "leaving group ${group.id}")
         viewModelScope.launch {
-            val response = groupService.declineGroup(_token.value!!, group.id)
+            val response = groupService.leaveGroup(_token.value!!, group.id)
             if (response.isSuccessful) {
                 onSuccess()
                 removeGroup(group)
