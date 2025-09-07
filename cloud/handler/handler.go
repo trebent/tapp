@@ -4,6 +4,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/trebent/tapp-backend/db"
+	"github.com/trebent/tapp-backend/env"
+	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
 )
 
@@ -25,6 +28,41 @@ func Handler() http.Handler {
 	// Health endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		zerologr.Info("health check OK")
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	mux.HandleFunc("/admin/debug", func(w http.ResponseWriter, r *http.Request) {
+		zerologr.Info("outputing debug info...")
+
+		if r.Header.Get("X-tapp-admin-key") != env.AdminKey.Value() {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		accounts, _ := db.ReadAll[*model.Account]()
+		groups, _ := db.ReadAll[*model.Group]()
+		tapps, _ := db.ReadAll[*model.Tapp]()
+		invites, _ := db.ReadAll[*model.Invitation]()
+
+		model.WriteJSON(w, accounts)
+		model.WriteJSON(w, groups)
+		model.WriteJSON(w, invites)
+		model.WriteJSON(w, tapps)
+	})
+
+	mux.HandleFunc("/admin/clear", func(w http.ResponseWriter, r *http.Request) {
+		zerologr.Info("clearing DB tables...")
+
+		if r.Header.Get("X-tapp-admin-key") != env.AdminKey.Value() {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		_ = db.Clear[*model.Invitation]()
+		_ = db.Clear[*model.Group]()
+		_ = db.Clear[*model.Tapp]()
+		_ = db.Clear[*model.Account]()
+
 		w.WriteHeader(http.StatusNoContent)
 	})
 
@@ -220,6 +258,19 @@ func Handler() http.Handler {
 		}
 
 		handleGroupKick(w, r)
+	})
+
+	mux.HandleFunc("/groups/invitations", func(w http.ResponseWriter, r *http.Request) {
+		if !authenticated(w, r) {
+			return
+		}
+
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		handleGroupInvitesList(w, r)
 	})
 
 	// TAPP endpoints

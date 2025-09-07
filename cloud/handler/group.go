@@ -218,6 +218,23 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	db.AquireTableLock[*model.Invitation]()
+	defer db.ReleaseTableLock[*model.Invitation]()
+
+	invites, err := db.ReadAll[*model.Invitation]()
+	if err != nil {
+		zerologr.Error(err, "failed to read invitations")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+
+	for _, invite := range invites {
+		if invite.GroupID == existingGroup.ID {
+			_ = db.Delete(invite)
+		}
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Delete(existingGroup); err != nil {
@@ -265,6 +282,20 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 
 	existingGroup.Invites = append(existingGroup.Invites, &model.Account{Email: invitedEmail})
 
+	db.AquireTableLock[*model.Invitation]()
+	defer db.ReleaseTableLock[*model.Invitation]()
+
+	if err := db.Save(&model.Invitation{
+		GroupID:   existingGroup.ID,
+		GroupName: existingGroup.Name,
+		Email:     invitedEmail,
+	}); err != nil {
+		zerologr.Error(err, "failed to save invitation")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Save(existingGroup); err != nil {
@@ -311,6 +342,16 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	existingGroup.Invites = slices.DeleteFunc(
 		existingGroup.Invites, func(a *model.Account) bool { return a.Email == email },
 	)
+
+	db.AquireTableLock[*model.Invitation]()
+	defer db.ReleaseTableLock[*model.Invitation]()
+
+	if err := db.Delete(&model.Invitation{GroupID: existingGroup.ID, Email: email}); err != nil {
+		zerologr.Error(err, "failed to delete invitation")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
@@ -381,6 +422,8 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 
 	db.AquireTableLock[*model.Group]()
 	defer db.ReleaseTableLock[*model.Group]()
+	db.AquireTableLock[*model.Invitation]()
+	defer db.ReleaseTableLock[*model.Invitation]()
 
 	existingGroup, err := db.Read(&model.Group{ID: i})
 	if err != nil {
@@ -424,6 +467,33 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 		zerologr.Error(err, "save group to DB failed")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
+		return
+	}
+}
+
+func handleGroupInvitesList(w http.ResponseWriter, r *http.Request) {
+	db.AquireTableLock[*model.Invitation]()
+	defer db.ReleaseTableLock[*model.Invitation]()
+
+	email := getUserEmailFromToken(r)
+
+	invites, err := db.ReadAll[*model.Invitation]()
+	if err != nil {
+		zerologr.Error(err, "failed to read from invitations table")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+
+	filteredInvites := slices.DeleteFunc(invites, func(i *model.Invitation) bool {
+		return i.Email != email
+	})
+
+	//nolint:gosec,govet
+	if err := model.WriteJSON(w, filteredInvites); err != nil {
+		zerologr.Error(err, "failed to serialize invitations")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonSerErr)
 		return
 	}
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 	"time"
@@ -22,6 +23,11 @@ type (
 		Members []*Account `json:"members,omitempty"`
 		Invites []*Account `json:"invites,omitempty"`
 	}
+	Invitation struct {
+		GroupID   int    `json:"group_id"`
+		GroupName string `json:"group_name"`
+		Email     string `json:"email"`
+	}
 	Tapp struct {
 		ID      int        `json:"id"`
 		Time    *time.Time `json:"time"`
@@ -40,6 +46,10 @@ func (g *Group) Key() string {
 
 func (t *Tapp) Key() string {
 	return strconv.Itoa(t.ID)
+}
+
+func (i *Invitation) Key() string {
+	return fmt.Sprintf("%d-%s", i.GroupID, i.Email)
 }
 
 func Deserialize[T any](reader io.Reader, target T) (T, error) {

@@ -37,6 +37,12 @@ var (
 		Name:  "FILE_SYSTEM",
 		Desc:  "File path",
 	})
+
+	AdminKey = envparser.Register(&envparser.Opts[string]{
+		Value: "adminkey",
+		Name:  "ADMIN_KEY",
+		Desc:  "Administrator key to read data",
+	})
 )
 
 func Parse() error {
