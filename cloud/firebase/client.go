@@ -71,6 +71,8 @@ func Remove(email string) {
 }
 
 func Send(groupName string, groupID int) {
+	zerologr.Info("notifying group " + groupName + " with id " + strconv.Itoa(groupID))
+
 	_, err := c.SendMulticast(context.Background(), &messaging.MulticastMessage{
 		Tokens: getFCMS(),
 		Data: map[string]string{

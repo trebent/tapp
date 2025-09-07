@@ -67,11 +67,6 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonDBErr)
 		return
 	}
-
-	// TODO: dispatch notification to group members
-	// TODO: dispatch notification to group members
-	// TODO: dispatch notification to group members
-	// TODO: dispatch notification to group members
 }
 
 func handleTappGet(w http.ResponseWriter, r *http.Request) {
