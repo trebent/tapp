@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.trebent.tapp.api.TappGroup
+import com.github.trebent.tapp.api.TappGroupInvitation
 import com.github.trebent.tapp.api.groupService
 import com.github.trebent.tapp.dataStore
 import com.github.trebent.tapp.tokenkey
@@ -32,9 +33,14 @@ val testGroups = listOf(
     TappGroup(10, "group10", "", "", "some words", emptyList(), emptyList()),
 )
 
+val testInvite = TappGroupInvitation(1, "name", "emial@test.se")
+val testInvites = listOf(testInvite)
+
 class TappGroupViewModel(private val application: Application) : AndroidViewModel(application) {
     private val _groups = MutableStateFlow<List<TappGroup>>(emptyList())
     val groups = _groups.asStateFlow()
+    private val _invitations = MutableStateFlow<List<TappGroupInvitation>>(emptyList())
+    val invitations = _invitations.asStateFlow()
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
@@ -109,6 +115,92 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    fun listInvitations(): StateFlow<List<TappGroupInvitation>> {
+        Log.i("GroupViewModel", "listing group invitations")
+        viewModelScope.launch {
+            val response = groupService.listInvitations(_token.value!!)
+            if (response.isSuccessful) {
+                updateInvitations(response.body()!!)
+            } else {
+                Log.e("GroupViewModel", "failed to list invitations!")
+            }
+        }
+
+        return invitations
+    }
+
+    fun acceptInvitation(
+        invite: TappGroupInvitation,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        Log.i("GroupViewModel", "accepting group invitation ${invite.groupId}")
+        viewModelScope.launch {
+            val response = groupService.joinGroup(_token.value!!, invite.groupId)
+            if (response.isSuccessful) {
+                onSuccess()
+                removeInvitation(invite.groupId)
+            } else {
+                Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
+                onFailure()
+            }
+        }
+    }
+
+    fun declineInvitation(
+        invite: TappGroupInvitation,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        Log.i("GroupViewModel", "declining group invitation ${invite.groupId}")
+        viewModelScope.launch {
+            val response = groupService.declineGroup(_token.value!!, invite.groupId)
+            if (response.isSuccessful) {
+                onSuccess()
+                removeInvitation(invite.groupId)
+            } else {
+                Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
+                onFailure()
+            }
+        }
+    }
+
+    fun leaveGroup(
+        group: TappGroup,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        Log.i("GroupViewModel", "leaving group ${group.id}")
+        viewModelScope.launch {
+            val response = groupService.declineGroup(_token.value!!, group.id)
+            if (response.isSuccessful) {
+                onSuccess()
+                removeGroup(group)
+            } else {
+                Log.e("GroupViewModel", "failed to leave group ${group.id}!")
+                onFailure()
+            }
+        }
+    }
+
+    fun kickFromGroup(
+        group: TappGroup,
+        email: String,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        Log.i("GroupViewModel", "kicking $email from group ${group.id}")
+        viewModelScope.launch {
+            val response = groupService.kickFromGroup(_token.value!!, group.id, email)
+            if (response.isSuccessful) {
+                onSuccess()
+            } else {
+                Log.e("GroupViewModel", "failed to leave group ${group.id}!")
+                onFailure()
+            }
+        }
+    }
+
     private fun create(new: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "creating group ${new.name}")
         viewModelScope.launch {
@@ -155,5 +247,20 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     private fun updateGroups(remoteGroups: List<TappGroup>) {
         Log.i("GroupViewModel", "setting ${remoteGroups.size} groups")
         _groups.value = remoteGroups
+    }
+
+    private fun removeGroup(group: TappGroup) {
+        Log.i("GroupViewModel", "removing local group ${group.id}")
+        _groups.value = _groups.value.filter { g -> g.id != group.id }
+    }
+
+    private fun updateInvitations(remoteInvitations: List<TappGroupInvitation>) {
+        Log.i("GroupViewModel", "setting ${remoteInvitations.size} invitations")
+        _invitations.value = remoteInvitations
+    }
+
+    private fun removeInvitation(groupID: Int) {
+        Log.i("GroupViewModel", "removing local invitation $groupID")
+        _invitations.value = _invitations.value.filter { i -> i.groupId != groupID }
     }
 }

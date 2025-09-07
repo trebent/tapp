@@ -224,6 +224,24 @@ func Handler() http.Handler {
 		handleGroupJoin(w, r)
 	})
 
+	mux.HandleFunc("/groups/{group}/decline", func(w http.ResponseWriter, r *http.Request) {
+		// POST
+		if r.Body != nil {
+			defer r.Body.Close()
+		}
+
+		if !authenticated(w, r) {
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		handleGroupDecline(w, r)
+	})
+
 	mux.HandleFunc("/groups/{group}/leave", func(w http.ResponseWriter, r *http.Request) {
 		// POST
 		if r.Body != nil {

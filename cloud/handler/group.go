@@ -365,6 +365,63 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleGroupDecline(w http.ResponseWriter, r *http.Request) {
+	groupID := strings.Split(r.URL.Path, "/")[2]
+
+	i, err := strconv.Atoi(groupID)
+	if err != nil {
+		zerologr.Error(err, "failed to convert path parameter to integer")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonFormatErr)
+		return
+	}
+
+	db.AquireTableLock[*model.Group]()
+	defer db.ReleaseTableLock[*model.Group]()
+
+	existingGroup, err := db.Read(&model.Group{ID: i})
+	if err != nil {
+		zerologr.Error(err, "group not found")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	email := getUserEmailFromToken(r)
+	isInvited := slices.ContainsFunc(
+		existingGroup.Invites, func(a *model.Account) bool { return a.Email == email },
+	)
+
+	if !isInvited {
+		zerologr.Error(err, "user was not invited to the group")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	existingGroup.Invites = slices.DeleteFunc(
+		existingGroup.Invites, func(a *model.Account) bool { return a.Email == email },
+	)
+
+	db.AquireTableLock[*model.Invitation]()
+	defer db.ReleaseTableLock[*model.Invitation]()
+
+	//nolint:govet,gosec
+	if err := db.Delete(&model.Invitation{GroupID: existingGroup.ID, Email: email}); err != nil {
+		zerologr.Error(err, "failed to delete invitation")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+	//nolint:gosec,govet
+	if err := db.Save(existingGroup); err != nil {
+		zerologr.Error(err, "failed to save group to DB")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+}
+
 func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 	groupID := strings.Split(r.URL.Path, "/")[2]
 

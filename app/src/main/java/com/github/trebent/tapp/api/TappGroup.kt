@@ -1,5 +1,6 @@
 package com.github.trebent.tapp.api
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -19,6 +20,12 @@ data class TappGroup(
     val description: String?,
     val members: List<Account>?,
     val invites: List<Account>?,
+)
+
+data class TappGroupInvitation(
+    @SerializedName("group_id") val groupId: Int,
+    @SerializedName("group_name") val groupName: String,
+    val email: String,
 )
 
 interface GroupService {
@@ -63,6 +70,12 @@ interface GroupService {
         @Path("groupID") groupID: Int,
     ): Response<Unit>
 
+    @POST("/groups/{groupID}/decline")
+    suspend fun declineGroup(
+        @Header("Authorization") token: String,
+        @Path("groupID") groupID: Int,
+    ): Response<Unit>
+
     @POST("/groups/{groupID}/kick")
     suspend fun kickFromGroup(
         @Header("Authorization") token: String,
@@ -75,4 +88,9 @@ interface GroupService {
         @Header("Authorization") token: String,
         @Path("groupID") groupID: Int,
     ): Response<Unit>
+
+    @GET("groups/invitations")
+    suspend fun listInvitations(
+        @Header("Authorization") token: String,
+    ): Response<List<TappGroupInvitation>>
 }
