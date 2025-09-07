@@ -49,7 +49,7 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go firebase.Send(group.Name, group.ID)
+	go firebase.Send(email, group)
 
 	newTapp := &model.Tapp{
 		Time:    time.Now().Local().UnixMilli(),
