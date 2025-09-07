@@ -155,14 +155,16 @@ fun HomeScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                Log.i("HomeScreen", "clicked main create group FAB")
-                goToEditGroup(newTappGroup)
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.AddCircle,
-                    contentDescription = "Go to account"
-                )
+            if (currentView == viewGroups) {
+                FloatingActionButton(onClick = {
+                    Log.i("HomeScreen", "clicked main create group FAB")
+                    goToEditGroup(newTappGroup)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.AddCircle,
+                        contentDescription = "Go to account"
+                    )
+                }
             }
         },
         modifier = Modifier.fillMaxSize(),
@@ -178,8 +180,21 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 if (currentView == viewGroups) {
-                    items(groups, span = { GridItemSpan(4) }) { tappGroup ->
-                        TappGroupRow(tappGroup, goToViewGroup)
+                    if (groups.isEmpty()) {
+                        item(span = { GridItemSpan(4) }) {
+                            Text(
+                                text = "You are not part of any groups yet",
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 24.dp)
+                            )
+                        }
+                    } else {
+                        items(groups, span = { GridItemSpan(4) }) { tappGroup ->
+                            TappGroupRow(tappGroup, goToViewGroup)
+                        }
                     }
                 } else {
                     if (!invitations.isEmpty()) {
@@ -318,6 +333,22 @@ fun HomeScreenMyGroupsPreview() {
     HomeScreen(
         viewGroups,
         MutableStateFlow(testGroups),
+        MutableStateFlow(testInvites),
+        { _, _, _ -> },
+        { _, _, _ -> },
+        {},
+        {},
+        {},
+    )
+}
+
+@ExperimentalMaterial3Api
+@Preview
+@Composable
+fun HomeScreenNoGroupsPreview() {
+    HomeScreen(
+        viewGroups,
+        MutableStateFlow(emptyList()),
         MutableStateFlow(testInvites),
         { _, _, _ -> },
         { _, _, _ -> },

@@ -627,7 +627,7 @@ fun TappGroupScreen(
 
     var currentTabIndex by rememberSaveable { mutableIntStateOf(currentTabIndex) }
 
-    var groupMemberEmailToRemove = ""
+    var groupMemberEmailToRemove by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -862,7 +862,7 @@ fun TappGroupScreen(
                 )
                 showRemoveGroupMemberDialog = false
 
-                leaveGroup(selectedGroup.value, {
+                kickFromGroup(selectedGroup.value, groupMemberEmailToRemove, {
                     Log.i(
                         "TappGroupScreen",
                         "removed user $groupMemberEmailToRemove from group ${selectedGroup.value.id} successfully"
@@ -920,7 +920,7 @@ fun GroupMemberRow(isOwner: Boolean, account: Account, removeMember: (email: Str
                 ) {
                     IconButton(
                         onClick = {
-
+                            removeMember(account.email)
                         },
                     ) {
                         Icon(

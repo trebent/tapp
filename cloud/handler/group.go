@@ -280,31 +280,36 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingGroup.Invites = append(existingGroup.Invites, &model.Account{Email: invitedEmail})
+	if !slices.ContainsFunc(existingGroup.Invites, func(a *model.Account) bool { return a.Email == invitedEmail }) &&
+		!slices.ContainsFunc(existingGroup.Members, func(a *model.Account) bool { return a.Email == invitedEmail }) {
+		existingGroup.Invites = append(existingGroup.Invites, &model.Account{Email: invitedEmail})
 
-	db.AquireTableLock[*model.Invitation]()
-	defer db.ReleaseTableLock[*model.Invitation]()
+		db.AquireTableLock[*model.Invitation]()
+		defer db.ReleaseTableLock[*model.Invitation]()
 
-	//nolint:govet,gosec
-	if err := db.Save(&model.Invitation{
-		GroupID:   existingGroup.ID,
-		GroupName: existingGroup.Name,
-		Email:     invitedEmail,
-	}); err != nil {
-		zerologr.Error(err, "failed to save invitation")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(jsonDBErr)
-		return
+		//nolint:govet,gosec
+		if err := db.Save(&model.Invitation{
+			GroupID:   existingGroup.ID,
+			GroupName: existingGroup.Name,
+			Email:     invitedEmail,
+		}); err != nil {
+			zerologr.Error(err, "failed to save invitation")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(jsonDBErr)
+			return
+		}
+
+		//nolint:gosec,govet
+		if err := db.Save(existingGroup); err != nil {
+			zerologr.Error(err, "save to DB failed")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(jsonDBErr)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	//nolint:gosec,govet
-	if err := db.Save(existingGroup); err != nil {
-		zerologr.Error(err, "save to DB failed")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(jsonDBErr)
-		return
-	}
+
 }
 
 func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
