@@ -235,6 +235,14 @@ func handleGroupDelete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//nolint:gosec,govet
+	if err := db.SimpleClear(&model.Tapp{GroupID: existingGroup.ID}); err != nil {
+		zerologr.Error(err, "failed to delete tapps related to group from DB")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonDBErr)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
 	if err := db.Delete(existingGroup); err != nil {
