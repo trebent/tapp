@@ -815,6 +815,11 @@ fun TappGroupScreen(
                     "successfully invited $user to group ${selectedGroup.value.id}"
                 )
                 showInviteUserDialog = false
+                Toast.makeText(
+                    context,
+                    "Invitation sent!",
+                    Toast.LENGTH_SHORT
+                ).show()
             }, {
                 Log.e(
                     "TappGroupScreen",
@@ -878,6 +883,11 @@ fun TappGroupScreen(
                         "TappGroupScreen",
                         "removed user $groupMemberEmailToRemove from group ${selectedGroup.value.id} successfully"
                     )
+                    Toast.makeText(
+                        context,
+                        "Removed user $groupMemberEmailToRemove.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }, {
                     Log.e(
                         "TappGroupScreen",

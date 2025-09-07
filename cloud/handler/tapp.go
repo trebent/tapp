@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/trebent/tapp-backend/db"
 	"github.com/trebent/tapp-backend/model"
@@ -40,18 +41,17 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.AquireTableLock[*model.Tapp]()
-	defer db.ReleaseTableLock[*model.Tapp]()
-
 	newTapp := &model.Tapp{
-		ID:      db.NextID[*model.Tapp](),
+		Time:    time.Now().Local().UnixMilli(),
 		GroupID: group.ID,
 		User:    &model.Account{Email: email},
 	}
+	db.SimpleAcquire(newTapp)
+	defer db.SimpleRelease(newTapp)
 
 	w.WriteHeader(http.StatusNoContent)
 	//nolint:gosec,govet
-	if err := db.Save(newTapp); err != nil {
+	if err := db.SimpleAppend(newTapp); err != nil {
 		zerologr.Error(err, "failed to save tapp to DB")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(jsonDBErr)
@@ -92,7 +92,7 @@ func handleTappGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tapps, err := db.ReadAll[*model.Tapp]()
+	tapps, err := db.SimpleRead(&model.Tapp{GroupID: group.ID})
 	if err != nil {
 		zerologr.Error(err, "failed to read all tapps from DB")
 		w.WriteHeader(http.StatusInternalServerError)

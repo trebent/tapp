@@ -41,13 +41,11 @@ func Handler() http.Handler {
 
 		accounts, _ := db.ReadAll[*model.Account]()
 		groups, _ := db.ReadAll[*model.Group]()
-		tapps, _ := db.ReadAll[*model.Tapp]()
 		invites, _ := db.ReadAll[*model.Invitation]()
 
 		_ = model.WriteJSON(w, accounts)
 		_ = model.WriteJSON(w, groups)
 		_ = model.WriteJSON(w, invites)
-		_ = model.WriteJSON(w, tapps)
 	})
 
 	mux.HandleFunc("/admin/clear", func(w http.ResponseWriter, r *http.Request) {
@@ -58,9 +56,14 @@ func Handler() http.Handler {
 			return
 		}
 
-		_ = db.Clear[*model.Invitation]()
+		groups, _ := db.ReadAll[*model.Group]()
+
+		for _, group := range groups {
+			_ = db.SimpleClear(&model.Tapp{GroupID: group.ID})
+		}
+
 		_ = db.Clear[*model.Group]()
-		_ = db.Clear[*model.Tapp]()
+		_ = db.Clear[*model.Invitation]()
 		_ = db.Clear[*model.Account]()
 
 		w.WriteHeader(http.StatusNoContent)

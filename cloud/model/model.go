@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"time"
 )
 
 type (
@@ -29,10 +28,9 @@ type (
 		Email     string `json:"email"`
 	}
 	Tapp struct {
-		ID      int        `json:"id"`
-		Time    *time.Time `json:"time"`
-		GroupID int        `json:"group_id"`
-		User    *Account   `json:"user"`
+		Time    int64    `json:"time"`
+		GroupID int      `json:"group_id"`
+		User    *Account `json:"user"`
 	}
 )
 
@@ -44,12 +42,12 @@ func (g *Group) Key() string {
 	return strconv.Itoa(g.ID)
 }
 
-func (t *Tapp) Key() string {
-	return strconv.Itoa(t.ID)
-}
-
 func (i *Invitation) Key() string {
 	return fmt.Sprintf("%d-%s", i.GroupID, i.Email)
+}
+
+func (t *Tapp) TableKey() string {
+	return strconv.Itoa(t.GroupID)
 }
 
 func Deserialize[T any](reader io.Reader, target T) (T, error) {
