@@ -35,14 +35,14 @@ func main() {
 	// ExitOnError is set to true, so this will exit on error.
 	_ = env.Parse()
 
-	handler.Initialize()
-	firebase.Initialize()
-
 	zerologr.Set(zerologr.New(&zerologr.Opts{
 		Console: env.LogToConsole.Value(),
 		Caller:  true,
 		V:       env.LogLevel.Value(),
 	}))
+
+	handler.Initialize()
+	firebase.Initialize()
 
 	signalCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()

@@ -33,6 +33,9 @@ func Initialize() {
 	readBlob()
 	zerologr.Info("loaded FCM blob", "blob", fcmBlob)
 
+	data, _ := os.ReadFile(env.FirebaseSvcKeyPath.Value())
+	zerologr.Info(string(data))
+
 	// Path to the JSON key you downloaded
 	opt := option.WithCredentialsFile(env.FirebaseSvcKeyPath.Value())
 
@@ -46,6 +49,19 @@ func Initialize() {
 	if err != nil {
 		zerologr.Error(err, "failed to create messaging app")
 		os.Exit(1)
+	}
+
+	msg := &messaging.Message{
+		Token: "test-token",
+		Notification: &messaging.Notification{
+			Title: "Hello",
+			Body:  "From Go",
+		},
+	}
+
+	_, err = client.Send(ctx, msg)
+	if err != nil {
+		zerologr.Error(err, "failed to send test message on start")
 	}
 
 	c = client
