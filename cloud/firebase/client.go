@@ -117,6 +117,7 @@ func writeBlob() {
 	if err != nil {
 		zerologr.Error(err, "failed to read from FCM blob")
 	} else {
+		//nolint:govet,gosec
 		err := json.Unmarshal(data, &fcmBlob)
 		if err != nil {
 			zerologr.Error(err, "failed to unmarshal FCM blob")
@@ -129,6 +130,7 @@ func readBlob() {
 	if err != nil {
 		zerologr.Error(err, "failed to serialize FCM update")
 	} else {
+		//nolint:govet,gosec
 		err := os.WriteFile(filepath.Join(env.FileSystem.Value(), "fcm-blob.json"), data, 0o755)
 		if err != nil {
 			zerologr.Error(err, "failed to write file")
