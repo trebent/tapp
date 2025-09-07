@@ -41,10 +41,16 @@ func Handler() http.Handler {
 
 		accounts, _ := db.ReadAll[*model.Account]()
 		groups, _ := db.ReadAll[*model.Group]()
+
+		for _, group := range groups {
+			_ = model.WriteJSON(w, group)
+			tapps, _ := db.SimpleRead(&model.Tapp{GroupID: group.ID})
+			_ = model.WriteJSON(w, tapps)
+		}
+
 		invites, _ := db.ReadAll[*model.Invitation]()
 
 		_ = model.WriteJSON(w, accounts)
-		_ = model.WriteJSON(w, groups)
 		_ = model.WriteJSON(w, invites)
 	})
 
