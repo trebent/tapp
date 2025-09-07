@@ -43,6 +43,10 @@ var (
 		Name:  "ADMIN_KEY",
 		Desc:  "Administrator key to read data",
 	})
+	FirebaseSvcKeyPath = envparser.Register(&envparser.Opts[string]{
+		Required: true,
+		Name:     "FIREBASE_SVC_KEY_PATH",
+	})
 )
 
 func Parse() error {

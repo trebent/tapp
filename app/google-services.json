@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "524985157668",
+    "project_id": "tapp-580b0",
+    "storage_bucket": "tapp-580b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:524985157668:android:7acf88e56fdabb2096f0b1",
+        "android_client_info": {
+          "package_name": "com.github.trebent.tapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqxj2uPxQHmdkjTPIr0qUPGWD_NobP-74"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
