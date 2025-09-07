@@ -80,9 +80,11 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hash := newHash()
+
 	authLock.Lock()
 	defer authLock.Unlock()
 	authBlob[hash] = body.Email
+	writeAuthBlob()
 
 	w.Header().Set("Authorization", hash)
 	w.WriteHeader(http.StatusNoContent)
