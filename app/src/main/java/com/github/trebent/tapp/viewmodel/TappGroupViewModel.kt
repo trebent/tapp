@@ -18,8 +18,16 @@ import kotlinx.coroutines.launch
 
 val newTappGroup = TappGroup(0, "", "", "", "", emptyList(), emptyList())
 val testGroup =
-    TappGroup(12, "group name", "❤️", "", "group description", emptyList(), emptyList())
-val testGroupOwner =
+    TappGroup(
+        12,
+        "group name",
+        "❤️",
+        "",
+        "group description",
+        listOf(testAccount, testAccount, testAccount),
+        emptyList()
+    )
+val testGroupOwnerNoMembers =
     TappGroup(
         12,
         "group name",
@@ -27,6 +35,16 @@ val testGroupOwner =
         testAccount.email,
         "group description",
         emptyList(),
+        emptyList()
+    )
+val testGroupOwner =
+    TappGroup(
+        12,
+        "group name",
+        "❤️",
+        testAccount.email,
+        "group description",
+        listOf(testAccount, testAccount, testAccount),
         emptyList()
     )
 

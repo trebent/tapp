@@ -9,11 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -53,6 +54,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,6 +72,7 @@ import com.github.trebent.tapp.viewmodel.newTappGroup
 import com.github.trebent.tapp.viewmodel.testAccount
 import com.github.trebent.tapp.viewmodel.testGroup
 import com.github.trebent.tapp.viewmodel.testGroupOwner
+import com.github.trebent.tapp.viewmodel.testGroupOwnerNoMembers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -753,30 +756,40 @@ fun TappGroupScreen(
                 }
             }
             item(span = { GridItemSpan(4) }) {
-                // Content below the tabs
-                when (currentTabIndex) {
-                    0 -> Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Tapp history",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                ) {
+                    // Content below the tabs
+                    when (currentTabIndex) {
+                        0 ->
+                            Text(
+                                "Tapp history",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
 
-                    1 -> Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        LazyColumn {
-
-                        }
+                        1 ->
+                            if (selectedGroup.value.memberCount() == 0) {
+                                Text(
+                                    text = "There are no members yet",
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                )
+                            } else {
+                                for (member in selectedGroup.value.members!!) {
+                                    GroupMemberRow(
+                                        selectedGroup.value.owner == account.value.email,
+                                        member,
+                                        { e ->
+                                            groupMemberEmailToRemove = e
+                                            showRemoveGroupMemberDialog = true
+                                        })
+                                }
+                            }
                     }
                 }
             }
@@ -875,6 +888,53 @@ fun TappGroupScreen(
 }
 
 @Composable
+fun GroupMemberRow(isOwner: Boolean, account: Account, removeMember: (email: String) -> Unit) {
+    LocalContext.current
+
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .heightIn(min = 56.dp)
+            .fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .padding(start = 24.dp, end = 16.dp)
+        ) {
+            Text(
+                account.email,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            )
+            if (isOwner) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxHeight()
+                ) {
+                    IconButton(
+                        onClick = {
+
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.group_remove),
+                            contentDescription = "remove member from group",
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun TappButton(emoji: String, onClick: () -> Unit, size: Dp, fontSize: TextUnit) {
     OutlinedButton(
         onClick = onClick,
@@ -927,6 +987,21 @@ fun TappGroupMemberScreenPreview() {
         1,
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroup).asStateFlow(),
+        {},
+        { g, e, s, f -> },
+        { g, s, f -> },
+        { g, e, s, f -> },
+        {}
+    )
+}
+
+@Preview
+@Composable
+fun TappGroupNoMemberOwnerScreenPreview() {
+    TappGroupScreen(
+        1,
+        MutableStateFlow(testAccount).asStateFlow(),
+        MutableStateFlow(testGroupOwnerNoMembers).asStateFlow(),
         {},
         { g, e, s, f -> },
         { g, s, f -> },
