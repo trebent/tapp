@@ -21,9 +21,9 @@ class TappNotificationService : FirebaseMessagingService() {
 
         // Data payload
         remoteMessage.data.let { data ->
-            val senderEmail = data["sender_email"]
+            val sender = data["sender"]
             val groupId = data["group_id"]
-            Log.d("FCM", "Data received: sender=$senderEmail group=$groupId")
+            Log.d("FCM", "Data received: sender=$sender group=$groupId")
             // Update UI or app logic if needed
         }
 

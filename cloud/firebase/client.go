@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"sync"
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
 	"github.com/trebent/tapp-backend/env"
+	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
 	"google.golang.org/api/option"
 )
@@ -71,16 +73,17 @@ func Remove(email string) {
 	zerologr.Info("wrote to FCM blob", "blob", fcmBlob)
 }
 
-func Send(groupName string, groupID int) {
-	zerologr.Info("notifying group " + groupName + " with id " + strconv.Itoa(groupID))
+func Send(sender string, group *model.Group) {
+	zerologr.Info("notifying group " + group.Name + " with id " + strconv.Itoa(group.ID))
 
 	_, err := c.SendMulticast(context.Background(), &messaging.MulticastMessage{
-		Tokens: getFCMS(),
+		Tokens: getFCMS(group),
 		Data: map[string]string{
-			"group_id": strconv.Itoa(groupID),
+			"sender":   sender,
+			"group_id": strconv.Itoa(group.ID),
 		},
 		Notification: &messaging.Notification{
-			Title: fmt.Sprintf("Group %s was tapped!", groupName),
+			Title: fmt.Sprintf("Group %s was tapped!", group.Name),
 			Body:  "Open the Tapp app to check it out!",
 		},
 	})
@@ -90,8 +93,23 @@ func Send(groupName string, groupID int) {
 	}
 }
 
-func getFCMS() []string {
-	return []string{}
+func getFCMS(group *model.Group) []string {
+	fcmLock.Lock()
+	defer fcmLock.Unlock()
+
+	fcms := []string{}
+	for email, fcm := range fcmBlob {
+		if slices.ContainsFunc(
+			group.Members,
+			func(a *model.Account) bool { return a.Email == email },
+		) || group.Owner == email {
+			fcms = append(fcms, fcm)
+		}
+	}
+
+	zerologr.Info("collected FCMs for broadcast", "fcms", fcms)
+
+	return fcms
 }
 
 func writeBlob() {
