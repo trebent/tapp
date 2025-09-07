@@ -63,6 +63,7 @@ kotlin {
 
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
+    implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-analytics")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

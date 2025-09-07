@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trebent/tapp-backend/db"
+	"github.com/trebent/tapp-backend/firebase"
 	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
 )
@@ -47,6 +48,8 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+
+	go firebase.Send(group.Name, group.ID)
 
 	newTapp := &model.Tapp{
 		Time:    time.Now().Local().UnixMilli(),

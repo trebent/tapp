@@ -14,6 +14,7 @@ import com.github.trebent.tapp.api.accountService
 import com.github.trebent.tapp.dataStore
 import com.github.trebent.tapp.emailkey
 import com.github.trebent.tapp.tokenkey
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,8 +65,11 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                 val response = accountService.getAccount(_token.value, _account.value.email)
                 if (response.isSuccessful) {
                     Log.i("AccountViewModel", "successfully fetched account ${response.body()}")
-                    _account.value = Account(_account.value.email, "", response.body()!!.tag)
+                    _account.value =
+                        Account(_account.value.email, "", response.body()!!.tag)
                 }
+
+                reportFCM()
             }
 
             Log.i("AccountViewModel", "initialised account view model")
@@ -100,9 +104,10 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
     fun fetchAccount(): StateFlow<Account> {
         viewModelScope.launch {
-            val response = accountService.getAccount(_token.value!!, _account.value.email)
+            val response = accountService.getAccount(_token.value, _account.value.email)
             if (response.isSuccessful) {
-                _account.value = Account(_account.value.email, "", response.body()?.tag)
+                _account.value =
+                    Account(_account.value.email, "", response.body()?.tag)
                 Log.i("AccountViewModel", "fetched account successfully ${_account.value}")
             } else {
                 Log.e("AccountViewModel", "failed to fetch account")
@@ -162,9 +167,16 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                         preferences[emailkey] = email
                     }
 
-                    fetchAccount()
-
                     onSuccess()
+
+                    val response = accountService.getAccount(_token.value, _account.value.email)
+                    if (response.isSuccessful) {
+                        Log.i("AccountViewModel", "successfully fetched account ${response.body()}")
+                        _account.value =
+                            Account(_account.value.email, "", response.body()!!.tag)
+                    }
+
+                    reportFCM()
                 }
             } else {
                 onFailure()
@@ -239,6 +251,29 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
             } else {
                 Log.e("AccountViewModel", "failed to delete the account")
                 onFailure()
+            }
+        }
+    }
+
+    private fun reportFCM() {
+        Log.i("AccountViewModel", "Fetching FCM token and notifying backend...")
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("FCM", "Fetching FCM token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+            Log.d("FCM", "FCM Token: $token")
+
+            // Send token to backend
+            viewModelScope.launch {
+                val response = accountService.pushFCM(token, _account.value.email)
+                if (response.isSuccessful) {
+                    Log.i("AccountViewModel", "sent FCM successfully")
+                } else {
+                    Log.e("AccountViewModel", "failed to report FCM to cloud backend")
+                }
             }
         }
     }

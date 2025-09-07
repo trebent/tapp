@@ -13,6 +13,7 @@ import (
 
 	"github.com/trebent/envparser"
 	"github.com/trebent/tapp-backend/env"
+	"github.com/trebent/tapp-backend/firebase"
 	"github.com/trebent/tapp-backend/handler"
 	"github.com/trebent/zerologr"
 )
@@ -35,6 +36,7 @@ func main() {
 	_ = env.Parse()
 
 	handler.Initialize()
+	firebase.Initialize()
 
 	en, _ := os.ReadDir(env.FirebaseSvcKeyPath.Value())
 	for _, er := range en {

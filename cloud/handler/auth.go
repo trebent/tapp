@@ -12,6 +12,7 @@ import (
 
 	"github.com/trebent/tapp-backend/db"
 	"github.com/trebent/tapp-backend/env"
+	"github.com/trebent/tapp-backend/firebase"
 	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
 )
@@ -91,12 +92,16 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
+
+	email := getUserEmailFromToken(r)
+	firebase.Remove(email)
+
 	token := r.Header.Get("Authorization")
 	authLock.Lock()
 	defer authLock.Unlock()
 	delete(authBlob, token)
 	writeAuthBlob()
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func writeAuthBlob() {

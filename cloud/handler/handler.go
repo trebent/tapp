@@ -328,5 +328,20 @@ func Handler() http.Handler {
 		}
 	})
 
+	// FCM
+	mux.HandleFunc("/fcm", func(w http.ResponseWriter, r *http.Request) {
+		// PUT
+		if !authenticated(w, r) {
+			return
+		}
+
+		if r.Method != http.MethodPut {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		handleFCMUpdate(w, r)
+	})
+
 	return logWrapper(mux)
 }
