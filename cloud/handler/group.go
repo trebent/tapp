@@ -288,6 +288,14 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = db.Read(&model.Account{Email: invitedEmail})
+	if err != nil {
+		zerologr.Error(err, "no email found matching the invited email")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(jsonFormatErr)
+		return
+	}
+
 	if !slices.ContainsFunc(
 		existingGroup.Invites,
 		func(a *model.Account) bool { return a.Email == invitedEmail },
