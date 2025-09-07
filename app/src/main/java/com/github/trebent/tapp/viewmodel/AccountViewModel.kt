@@ -28,16 +28,16 @@ val testAccountWithEmptyTag = Account("else@domain.se", "pw", "")
 
 
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
-    private val _loginState = MutableStateFlow(false)
-
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
+    val initialised = _i.asStateFlow()
+
     private var _account = MutableStateFlow(Account("", "", null))
     val account = _account.asStateFlow()
-    private val _token = MutableStateFlow<String?>(null)
 
+    private val _loginState = MutableStateFlow(false)
+    private val _token = MutableStateFlow("")
     val isLoggedIn = _loginState.asStateFlow()
-    val initialised = _i.asStateFlow()
 
     init {
         Log.i("AccountViewModel", "initialising the auth view model")
@@ -45,19 +45,23 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
             Log.i("AccountViewModel", "checking datastore for stored tokens")
 
             val preferences = application.dataStore.data.first()
-            _token.value = preferences[tokenkey]
+            val prefToken = preferences[tokenkey]
+            if (prefToken != null) {
+                Log.i("AccountViewModel", "found stored token, using it...")
+                _token.value = prefToken
+            }
 
             val email = preferences[emailkey]
             if (email != null) {
                 _account.value = Account(email, "", null)
             }
 
-            if (_token.value != null) {
+            if (_token.value != "") {
                 _loginState.value = true
             }
 
             if (_loginState.value) {
-                val response = accountService.getAccount(_token.value!!, _account.value.email)
+                val response = accountService.getAccount(_token.value, _account.value.email)
                 if (response.isSuccessful) {
                     Log.i("AccountViewModel", "successfully fetched account ${response.body()}")
                     _account.value = Account(_account.value.email, "", response.body()!!.tag)
@@ -69,17 +73,29 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
             application.dataStore.data.collect { preferences ->
                 Log.i("AccountViewModel", "preferences $preferences")
+
                 val email = preferences[emailkey]
                 if (email != null) {
                     _account.value = Account(email, "", _account.value.tag)
                 } else {
                     _account.value = Account("", "", null)
                 }
-                _token.value = preferences[tokenkey]
+
+                val prefToken = preferences[tokenkey]
+                if (prefToken != null) {
+                    _token.value = prefToken
+                } else {
+                    _token.value = ""
+                }
+
                 Log.i("AccountViewModel", "preferences updated token ${_token.value}")
                 Log.i("AccountViewModel", "preferences updated account ${_account.value}")
             }
         }
+    }
+
+    fun getToken(): String {
+        return _token.value
     }
 
     fun fetchAccount(): StateFlow<Account> {
@@ -146,9 +162,10 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                         preferences[emailkey] = email
                     }
 
+                    fetchAccount()
+
                     onSuccess()
                 }
-                onSuccess()
             } else {
                 onFailure()
             }
@@ -159,7 +176,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         Log.i("AccountViewModel", "logout")
 
         viewModelScope.launch {
-            val response = accountService.logout(_token.value!!)
+            val response = accountService.logout(_token.value)
 
             _loginState.value = false
 
@@ -180,7 +197,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
         viewModelScope.launch {
             val response = accountService.updateAccount(
-                _token.value!!,
+                _token.value,
                 _account.value.email,
                 Account(_account.value.email, "", tag)
             )
@@ -200,7 +217,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         Log.i("AccountViewModel", "updating password")
         viewModelScope.launch {
             val response =
-                accountService.updatePassword(_token.value!!, ChangePasswordRequest(password))
+                accountService.updatePassword(_token.value, ChangePasswordRequest(password))
             if (response.isSuccessful) {
                 Log.i("AccountViewModel", "successfully updated the password!")
                 onSuccess()
@@ -215,7 +232,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         Log.i("AccountViewModel", "deleting account ${_account.value.email}")
         viewModelScope.launch {
             val response =
-                accountService.deleteAccount(_token.value!!, _account.value.email)
+                accountService.deleteAccount(_token.value, _account.value.email)
             if (response.isSuccessful) {
                 Log.i("AccountViewModel", "successfully deleted the account!")
                 logout { onSuccess() }

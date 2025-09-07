@@ -258,7 +258,13 @@ fun LoginScreenRoute(
 ) {
     Log.i("LoginScreenRoute", "navigated")
 
-    LoginScreen({ u, p, s, f -> accountViewModel.login(u, p, s, f) }, onSignup, onLogin)
+    LoginScreen(
+        { u, p, s, f ->
+            accountViewModel.login(u, p, s, f)
+        },
+        onSignup,
+        onLogin,
+    )
 }
 
 @Composable

@@ -54,6 +54,7 @@ class MainActivity : ComponentActivity() {
             !accountViewModel.initialised.value && !tappGroupViewModel.initialised.value
         }
 
+        tappGroupViewModel.setTokenGetter({ accountViewModel.getToken() })
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

@@ -10,12 +10,9 @@ import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.api.TappGroupInvitation
 import com.github.trebent.tapp.api.groupService
 import com.github.trebent.tapp.api.sortedTapps
-import com.github.trebent.tapp.dataStore
-import com.github.trebent.tapp.tokenkey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
@@ -87,37 +84,32 @@ val testInvite = TappGroupInvitation(1, "name", "emial@test.se")
 val testInvites = listOf(testInvite)
 
 class TappGroupViewModel(private val application: Application) : AndroidViewModel(application) {
+
+    private val _selectedGroup = MutableStateFlow(newTappGroup)
+    val selectedGroup = _selectedGroup.asStateFlow()
+
     private val _groups = MutableStateFlow<List<TappGroup>>(emptyList())
     val groups = _groups.asStateFlow()
+
     private val _invitations = MutableStateFlow<List<TappGroupInvitation>>(emptyList())
     val invitations = _invitations.asStateFlow()
+
     private val _tapps = MutableStateFlow<List<Tapp>>(emptyList())
     val tapps = _tapps.asStateFlow()
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
-    private val _token = MutableStateFlow<String?>(null)
-    private val _selectedGroup = MutableStateFlow(newTappGroup)
-
     val initialised = _i.asStateFlow()
-    val selectedGroup = _selectedGroup.asStateFlow()
+
+    private var _tokenGetter: () -> String = { "" }
 
     init {
         Log.i("GroupViewModel", "initialising the group view model")
-        viewModelScope.launch {
-            Log.i("GroupViewModel", "checking datastore for stored tokens")
+        _i.value = true
+    }
 
-            val preferences = application.dataStore.data.first()
-            _token.value = preferences[tokenkey]
-
-            _i.value = true
-
-            application.dataStore.data.collect { preferences ->
-                Log.i("GroupViewModel", "preferences $preferences")
-                _token.value = preferences[tokenkey]
-                Log.i("GroupViewModel", "preferences updated token ${_token.value}")
-            }
-        }
+    fun setTokenGetter(getter: () -> String) {
+        _tokenGetter = getter
     }
 
     fun tapp(a: Account) {
@@ -125,7 +117,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         val t = Tapp(selectedGroup.value.id, System.currentTimeMillis(), a)
         _tapps.value = listOf(t) + _tapps.value
         viewModelScope.launch {
-            val response = groupService.createTapp(_token.value!!, selectedGroup.value.id)
+            val response = groupService.createTapp(_tokenGetter(), selectedGroup.value.id)
             if (!response.isSuccessful) {
                 Log.e("GroupViewModel", "failed to tapp group ${selectedGroup.value.id}")
             }
@@ -135,7 +127,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun listTapps(): StateFlow<List<Tapp>> {
         Log.i("GroupViewModel", "listing tapps for group ${selectedGroup.value.id}")
         viewModelScope.launch {
-            val response = groupService.listTapps(_token.value!!, selectedGroup.value.id)
+            val response = groupService.listTapps(_tokenGetter(), selectedGroup.value.id)
             if (response.isSuccessful) {
                 _tapps.value = sortedTapps(response.body()!!)
                 Log.i("GroupViewModel", "listed ${_tapps.value.size} tapps!")
@@ -150,7 +142,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun list(): StateFlow<List<TappGroup>> {
         Log.i("GroupViewModel", "listing groups")
         viewModelScope.launch {
-            val response = groupService.listGroups(_token.value!!)
+            val response = groupService.listGroups(_tokenGetter())
             if (response.isSuccessful) {
                 updateGroups(response.body()!!)
             } else {
@@ -164,7 +156,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun refreshSelectedGroup(): StateFlow<TappGroup> {
         Log.i("GroupViewModel", "refreshing the selected group")
         viewModelScope.launch {
-            val response = groupService.getGroup(_token.value!!, _selectedGroup.value.id)
+            val response = groupService.getGroup(_tokenGetter(), _selectedGroup.value.id)
             if (response.isSuccessful) {
                 _selectedGroup.value = response.body()!!
             } else {
@@ -182,7 +174,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun delete(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "deleting group ${tappGroup.id}: ${tappGroup.name}")
         viewModelScope.launch {
-            val response = groupService.deleteGroup(_token.value!!, tappGroup.id)
+            val response = groupService.deleteGroup(_tokenGetter(), tappGroup.id)
             if (response.isSuccessful) {
                 Log.i(
                     "GroupViewModel",
@@ -216,7 +208,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "inviting user $email to group $group.id")
         viewModelScope.launch {
-            val response = groupService.inviteToGroup(_token.value!!, group.id, email)
+            val response = groupService.inviteToGroup(_tokenGetter(), group.id, email)
             if (response.isSuccessful) {
                 list()
                 onSuccess()
@@ -230,7 +222,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun listInvitations(): StateFlow<List<TappGroupInvitation>> {
         Log.i("GroupViewModel", "listing group invitations")
         viewModelScope.launch {
-            val response = groupService.listInvitations(_token.value!!)
+            val response = groupService.listInvitations(_tokenGetter())
             if (response.isSuccessful) {
                 updateInvitations(response.body()!!)
             } else {
@@ -248,7 +240,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "accepting group invitation ${invite.groupId}")
         viewModelScope.launch {
-            val response = groupService.joinGroup(_token.value!!, invite.groupId)
+            val response = groupService.joinGroup(_tokenGetter(), invite.groupId)
             if (response.isSuccessful) {
                 onSuccess()
                 removeInvitation(invite.groupId)
@@ -269,7 +261,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "declining group invitation ${invite.groupId}")
         viewModelScope.launch {
-            val response = groupService.declineGroup(_token.value!!, invite.groupId)
+            val response = groupService.declineGroup(_tokenGetter(), invite.groupId)
             if (response.isSuccessful) {
                 onSuccess()
                 removeInvitation(invite.groupId)
@@ -287,7 +279,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "leaving group ${group.id}")
         viewModelScope.launch {
-            val response = groupService.leaveGroup(_token.value!!, group.id)
+            val response = groupService.leaveGroup(_tokenGetter(), group.id)
             if (response.isSuccessful) {
                 onSuccess()
                 removeGroup(group)
@@ -306,7 +298,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "kicking $email from group ${group.id}")
         viewModelScope.launch {
-            val response = groupService.kickFromGroup(_token.value!!, group.id, email)
+            val response = groupService.kickFromGroup(_tokenGetter(), group.id, email)
             if (response.isSuccessful) {
                 onSuccess()
                 _selectedGroup.value = TappGroup(
@@ -328,7 +320,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     private fun create(new: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "creating group ${new.name}")
         viewModelScope.launch {
-            val response = groupService.createGroup(_token.value!!, new)
+            val response = groupService.createGroup(_tokenGetter(), new)
             if (response.isSuccessful) {
                 Log.i(
                     "GroupViewModel",
@@ -350,7 +342,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         Log.i("GroupViewModel", "updating group ${updatedTappGroup.id}: ${updatedTappGroup.name}")
         viewModelScope.launch {
             val response =
-                groupService.updateGroup(_token.value!!, updatedTappGroup.id, updatedTappGroup)
+                groupService.updateGroup(_tokenGetter(), updatedTappGroup.id, updatedTappGroup)
             if (response.isSuccessful) {
                 Log.i(
                     "GroupViewModel",
