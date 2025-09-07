@@ -34,7 +34,7 @@ func main() {
 	// ExitOnError is set to true, so this will exit on error.
 	_ = env.Parse()
 
-	handler.initAuth()
+	handler.Initialize()
 
 	zerologr.Set(zerologr.New(&zerologr.Opts{
 		Console: env.LogToConsole.Value(),
