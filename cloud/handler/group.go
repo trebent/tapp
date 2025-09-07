@@ -280,8 +280,14 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !slices.ContainsFunc(existingGroup.Invites, func(a *model.Account) bool { return a.Email == invitedEmail }) &&
-		!slices.ContainsFunc(existingGroup.Members, func(a *model.Account) bool { return a.Email == invitedEmail }) {
+	if !slices.ContainsFunc(
+		existingGroup.Invites,
+		func(a *model.Account) bool { return a.Email == invitedEmail },
+	) &&
+		!slices.ContainsFunc(
+			existingGroup.Members,
+			func(a *model.Account) bool { return a.Email == invitedEmail },
+		) {
 		existingGroup.Invites = append(existingGroup.Invites, &model.Account{Email: invitedEmail})
 
 		db.AquireTableLock[*model.Invitation]()
