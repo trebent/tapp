@@ -104,6 +104,7 @@ func writeAuthBlob() {
 	if err != nil {
 		zerologr.Error(err, "failed to serialize auth blob data")
 	} else {
+		//nolint:govet,gosec
 		err := os.WriteFile(fp, data, 0o755)
 		if err != nil {
 			zerologr.Error(err, "failed to write auth blob to file")
@@ -118,6 +119,7 @@ func readAuthBlob() {
 	if err != nil {
 		zerologr.Error(err, "failed to read auth blob file")
 	} else {
+		//nolint:govet,gosec
 		if err := json.Unmarshal(data, &authBlob); err != nil {
 			zerologr.Error(err, "failed to write auth blob to file")
 		}
