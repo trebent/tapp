@@ -33,6 +33,13 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 
 	email := getUserEmailFromToken(r)
 
+	account, err := db.Read(&model.Account{Email: email})
+	if err != nil {
+		zerologr.Error(err, "account not found")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	isMember := email == group.Owner ||
 		slices.ContainsFunc(group.Members, func(a *model.Account) bool { return a.Email == email })
 	if !isMember {
@@ -44,7 +51,7 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 	newTapp := &model.Tapp{
 		Time:    time.Now().Local().UnixMilli(),
 		GroupID: group.ID,
-		User:    &model.Account{Email: email},
+		User:    &model.Account{Email: email, Tag: account.Tag},
 	}
 	db.SimpleAcquire(newTapp)
 	defer db.SimpleRelease(newTapp)

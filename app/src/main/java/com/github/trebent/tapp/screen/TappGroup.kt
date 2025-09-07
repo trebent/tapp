@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.github.trebent.tapp.R
 import com.github.trebent.tapp.api.Account
+import com.github.trebent.tapp.api.Tapp
 import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.viewmodel.AccountViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
@@ -74,6 +75,7 @@ import com.github.trebent.tapp.viewmodel.testAccount
 import com.github.trebent.tapp.viewmodel.testGroup
 import com.github.trebent.tapp.viewmodel.testGroupOwner
 import com.github.trebent.tapp.viewmodel.testGroupOwnerNoMembers
+import com.github.trebent.tapp.viewmodel.testTapps
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,11 +89,14 @@ fun TappGroupScreenRoute(
     goBack: () -> Unit
 ) {
     Log.i("TappGroupScreenRoute", "navigated")
+    val asf = accountViewModel.account
     TappGroupScreen(
         0,
         accountViewModel.account,
         tappGroupViewModel.selectedGroup,
         { tappGroupViewModel.refreshSelectedGroup() },
+        tappGroupViewModel.listTapps(),
+        { tappGroupViewModel.tapp(asf.value) },
         goToEditGroup,
         { e, g, s, f -> tappGroupViewModel.inviteToGroup(e, g, s, f) },
         { g, s, f -> tappGroupViewModel.leaveGroup(g, s, f) },
@@ -614,6 +619,8 @@ fun TappGroupScreen(
     accountStateFlow: StateFlow<Account>,
     tappGroupStateFlow: StateFlow<TappGroup>,
     refreshSelectedGroup: () -> Unit,
+    tappStateFlow: StateFlow<List<Tapp>>,
+    onTapp: () -> Unit,
     goToEditGroup: (tappGroup: TappGroup) -> Unit,
     inviteToGroup: (email: String, tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     leaveGroup: (tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
@@ -630,6 +637,7 @@ fun TappGroupScreen(
 
     val selectedGroup = tappGroupStateFlow.collectAsState()
     val account = accountStateFlow.collectAsState()
+    val tapps = tappStateFlow.collectAsState()
 
     var currentTabIndex by rememberSaveable { mutableIntStateOf(currentTabIndex) }
 
@@ -724,6 +732,7 @@ fun TappGroupScreen(
                                 "TappGroupScreen",
                                 "tapped!!! ${selectedGroup.value.id}: ${selectedGroup.value.name}"
                             )
+                            onTapp()
                         },
                         128.dp,
                         56.sp,
@@ -775,11 +784,9 @@ fun TappGroupScreen(
                     // Content below the tabs
                     when (currentTabIndex) {
                         0 ->
-                            Text(
-                                "Tapp history",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
+                            for (tapp in tapps.value) {
+                                TappRow(tapp)
+                            }
 
                         1 ->
                             if (selectedGroup.value.memberCount() == 0) {
@@ -908,6 +915,32 @@ fun TappGroupScreen(
 }
 
 @Composable
+fun TappRow(tapp: Tapp) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .heightIn(min = 32.dp)
+            .fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 32.dp)
+                .padding(start = 24.dp, end = 16.dp)
+        ) {
+            Text(tapp.user.userIdentifier())
+            Text(
+                text = tapp.timeString(),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
+
+@Composable
 fun GroupMemberRow(isOwner: Boolean, account: Account, removeMember: (email: String) -> Unit) {
     LocalContext.current
 
@@ -978,6 +1011,8 @@ fun TappGroupScreenPreview() {
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroup).asStateFlow(),
         {},
+        MutableStateFlow(testTapps).asStateFlow(),
+        {},
         {},
         { g, e, s, f -> },
         { g, s, f -> },
@@ -993,6 +1028,8 @@ fun TappGroupOwnerScreenPreview() {
         0,
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroupOwner).asStateFlow(),
+        {},
+        MutableStateFlow(testTapps).asStateFlow(),
         {},
         {},
         { g, e, s, f -> },
@@ -1010,6 +1047,8 @@ fun TappGroupMemberScreenPreview() {
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroup).asStateFlow(),
         {},
+        MutableStateFlow(testTapps).asStateFlow(),
+        {},
         {},
         { g, e, s, f -> },
         { g, s, f -> },
@@ -1026,6 +1065,8 @@ fun TappGroupNoMemberOwnerScreenPreview() {
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroupOwnerNoMembers).asStateFlow(),
         {},
+        MutableStateFlow(testTapps).asStateFlow(),
+        {},
         {},
         { g, e, s, f -> },
         { g, s, f -> },
@@ -1041,6 +1082,8 @@ fun TappGroupMemberOwnerScreenPreview() {
         1,
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroupOwner).asStateFlow(),
+        {},
+        MutableStateFlow(testTapps).asStateFlow(),
         {},
         {},
         { g, e, s, f -> },

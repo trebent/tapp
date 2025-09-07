@@ -4,6 +4,8 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.trebent.tapp.api.Account
+import com.github.trebent.tapp.api.Tapp
 import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.api.TappGroupInvitation
 import com.github.trebent.tapp.api.groupService
@@ -47,7 +49,26 @@ val testGroupOwner =
         listOf(testAccount, testAccount, testAccount),
         emptyList()
     )
-
+val testTapps = listOf(
+    Tapp(1, 123, testAccountWithNullTag),
+    Tapp(1, 123, testAccountWithNullTag),
+    Tapp(1, 123, testAccountWithNullTag),
+    Tapp(1, 123, testAccountWithNullTag),
+    Tapp(1, 123, testAccountWithEmptyTag),
+    Tapp(1, 123, testAccount),
+    Tapp(1, 123, testAccountWithEmptyTag),
+    Tapp(1, 123, testAccount),
+    Tapp(1, 123, testAccount),
+    Tapp(1, 123, testAccount),
+    Tapp(1, 123, testAccount),
+    Tapp(1, 123, testAccountTag2),
+    Tapp(1, 123, testAccount),
+    Tapp(1, 123, testAccountWithEmptyTag),
+    Tapp(1, 123, testAccountTag2),
+    Tapp(1, 123, testAccountTag2),
+    Tapp(1, 123, testAccountWithEmptyTag),
+    Tapp(1, 123, testAccountTag2),
+)
 val testGroups = listOf(
     TappGroup(1, "group1", "", "", "some words", listOf(testAccount, testAccount), emptyList()),
     TappGroup(2, "group2", "", "", "some words", emptyList(), emptyList()),
@@ -69,6 +90,8 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     val groups = _groups.asStateFlow()
     private val _invitations = MutableStateFlow<List<TappGroupInvitation>>(emptyList())
     val invitations = _invitations.asStateFlow()
+    private val _tapps = MutableStateFlow<List<Tapp>>(emptyList())
+    val tapps = _tapps.asStateFlow()
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
@@ -94,6 +117,32 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
                 Log.i("GroupViewModel", "preferences updated token ${_token.value}")
             }
         }
+    }
+
+    fun tapp(a: Account) {
+        Log.i("GroupViewModel", "tapped group! ${selectedGroup.value.id}")
+        val t = Tapp(selectedGroup.value.id, System.currentTimeMillis(), a)
+        _tapps.value += t
+        viewModelScope.launch {
+            val response = groupService.createTapp(_token.value!!, selectedGroup.value.id)
+            if (!response.isSuccessful) {
+                Log.e("GroupViewModel", "failed to tapp group ${selectedGroup.value.id}")
+            }
+        }
+    }
+
+    fun listTapps(): StateFlow<List<Tapp>> {
+        Log.i("GroupViewModel", "listing tapps for group ${selectedGroup.value.id}")
+        viewModelScope.launch {
+            val response = groupService.listTapps(_token.value!!, selectedGroup.value.id)
+            if (response.isSuccessful) {
+                _tapps.value = response.body()!!
+            } else {
+                Log.e("GroupViewModel", "failed to list tapps for group ${selectedGroup.value.id}")
+            }
+        }
+
+        return tapps
     }
 
     fun list(): StateFlow<List<TappGroup>> {

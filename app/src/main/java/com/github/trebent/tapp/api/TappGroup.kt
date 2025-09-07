@@ -10,6 +10,9 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 data class TappGroup(
@@ -29,6 +32,18 @@ data class TappGroupInvitation(
     @SerializedName("group_name") val groupName: String,
     val email: String,
 )
+
+val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+data class Tapp(
+    @SerializedName("group_id") val groupId: Int,
+    val time: Long,
+    val user: Account
+) {
+    fun timeString(): String {
+        return sdf.format(Date(time))
+    }
+}
 
 interface GroupService {
     @GET("/groups")
@@ -95,4 +110,16 @@ interface GroupService {
     suspend fun listInvitations(
         @Header("Authorization") token: String,
     ): Response<List<TappGroupInvitation>>
+
+    @POST("groups/{groupID}/tapp")
+    suspend fun createTapp(
+        @Header("Authorization") token: String,
+        @Path("groupID") groupID: Int,
+    ): Response<Unit>
+
+    @GET("groups/{groupID}/tapp")
+    suspend fun listTapps(
+        @Header("Authorization") token: String,
+        @Path("groupID") groupID: Int,
+    ): Response<List<Tapp>>
 }

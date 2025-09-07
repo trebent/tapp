@@ -10,7 +10,15 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 
-data class Account(val email: String, val password: String, val tag: String?)
+data class Account(val email: String, val password: String, val tag: String?) {
+    fun userIdentifier(): String {
+        if (tag != null && tag != "") {
+            return tag
+        }
+        return email
+    }
+}
+
 data class LoginRequest(val email: String, val password: String)
 data class ChangePasswordRequest(val password: String)
 

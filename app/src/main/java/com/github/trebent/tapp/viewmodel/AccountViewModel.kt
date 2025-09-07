@@ -21,7 +21,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
-val testAccount = Account("testemail@domain.se", "pw", "some-tag")
+val testAccount = Account("testemail@domain.se", "pw", "superman")
+val testAccountTag2 = Account("testemail@domain.se", "pw", "taggy")
+val testAccountWithNullTag = Account("someone@domain.se", "pw", null)
+val testAccountWithEmptyTag = Account("else@domain.se", "pw", "")
 
 
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
