@@ -77,7 +77,9 @@ func SimpleAppend[T Simple](entity T) error {
 		return err
 	}
 
-	simpleLogger.Info("entity saved", "entity", entity, "table", getSimpleTableName(entity), "count", len(es))
+	simpleLogger.Info(
+		"entity saved", "entity", entity, "table", getSimpleTableName(entity), "count", len(es),
+	)
 
 	return nil
 }
