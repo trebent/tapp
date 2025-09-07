@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -90,6 +91,7 @@ fun TappGroupScreenRoute(
         0,
         accountViewModel.account,
         tappGroupViewModel.selectedGroup,
+        { tappGroupViewModel.refreshSelectedGroup() },
         goToEditGroup,
         { e, g, s, f -> tappGroupViewModel.inviteToGroup(e, g, s, f) },
         { g, s, f -> tappGroupViewModel.leaveGroup(g, s, f) },
@@ -510,9 +512,12 @@ fun InviteToGroupContent(onConfirm: (user: String) -> Unit, onCancel: () -> Unit
                     user = v
                     Log.i("InviteToGroupDialog", "entered text in user field: $user")
                 },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Done,
+                ),
                 keyboardActions = KeyboardActions(
-                    onDone = { focusManager.moveFocus(FocusDirection.Down) }
+                    onDone = { focusManager.clearFocus() }
                 ),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
@@ -608,6 +613,7 @@ fun TappGroupScreen(
     currentTabIndex: Int,
     accountStateFlow: StateFlow<Account>,
     tappGroupStateFlow: StateFlow<TappGroup>,
+    refreshSelectedGroup: () -> Unit,
     goToEditGroup: (tappGroup: TappGroup) -> Unit,
     inviteToGroup: (email: String, tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     leaveGroup: (tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
@@ -745,12 +751,17 @@ fun TappGroupScreen(
                 SecondaryTabRow(selectedTabIndex = currentTabIndex) {
                     Tab(
                         selected = currentTabIndex == 0,
-                        onClick = { currentTabIndex = 0 },
+                        onClick = {
+                            currentTabIndex = 0
+                        },
                         text = { Text("Tapp history") }
                     )
                     Tab(
                         selected = currentTabIndex == 1,
-                        onClick = { currentTabIndex = 1 },
+                        onClick = {
+                            currentTabIndex = 1
+                            refreshSelectedGroup()
+                        },
                         text = { Text("Members") }
                     )
                 }
@@ -867,7 +878,6 @@ fun TappGroupScreen(
                         "TappGroupScreen",
                         "removed user $groupMemberEmailToRemove from group ${selectedGroup.value.id} successfully"
                     )
-                    goBack()
                 }, {
                     Log.e(
                         "TappGroupScreen",
@@ -958,6 +968,7 @@ fun TappGroupScreenPreview() {
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroup).asStateFlow(),
         {},
+        {},
         { g, e, s, f -> },
         { g, s, f -> },
         { g, e, s, f -> },
@@ -972,6 +983,7 @@ fun TappGroupOwnerScreenPreview() {
         0,
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroupOwner).asStateFlow(),
+        {},
         {},
         { g, e, s, f -> },
         { g, s, f -> },
@@ -988,6 +1000,7 @@ fun TappGroupMemberScreenPreview() {
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroup).asStateFlow(),
         {},
+        {},
         { g, e, s, f -> },
         { g, s, f -> },
         { g, e, s, f -> },
@@ -1003,6 +1016,7 @@ fun TappGroupNoMemberOwnerScreenPreview() {
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroupOwnerNoMembers).asStateFlow(),
         {},
+        {},
         { g, e, s, f -> },
         { g, s, f -> },
         { g, e, s, f -> },
@@ -1017,6 +1031,7 @@ fun TappGroupMemberOwnerScreenPreview() {
         1,
         MutableStateFlow(testAccount).asStateFlow(),
         MutableStateFlow(testGroupOwner).asStateFlow(),
+        {},
         {},
         { g, e, s, f -> },
         { g, s, f -> },

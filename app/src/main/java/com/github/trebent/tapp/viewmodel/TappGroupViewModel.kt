@@ -110,6 +110,20 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         return groups
     }
 
+    fun refreshSelectedGroup(): StateFlow<TappGroup> {
+        Log.i("GroupViewModel", "refreshing the selected group")
+        viewModelScope.launch {
+            val response = groupService.getGroup(_token.value!!, _selectedGroup.value.id)
+            if (response.isSuccessful) {
+                _selectedGroup.value = response.body()!!
+            } else {
+                Log.e("GroupViewModel", "failed to refresh selected group")
+            }
+        }
+
+        return _selectedGroup
+    }
+
     fun selectGroup(group: TappGroup) {
         _selectedGroup.value = group
     }
@@ -244,6 +258,15 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             val response = groupService.kickFromGroup(_token.value!!, group.id, email)
             if (response.isSuccessful) {
                 onSuccess()
+                _selectedGroup.value = TappGroup(
+                    group.id,
+                    group.name,
+                    group.emoji,
+                    group.owner,
+                    group.description,
+                    group.members!!.filter { g -> g.email != email },
+                    group.invites,
+                )
             } else {
                 Log.e("GroupViewModel", "failed to leave group ${group.id}!")
                 onFailure()
