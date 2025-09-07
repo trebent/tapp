@@ -75,7 +75,9 @@ fun HomeScreenRoute(
     HomeScreen(
         viewGroups,
         tappGroupViewModel.list(),
+        { tappGroupViewModel.list() },
         tappGroupViewModel.listInvitations(),
+        { tappGroupViewModel.listInvitations() },
         { i, s, f -> tappGroupViewModel.acceptInvitation(i, s, f) },
         { i, s, f -> tappGroupViewModel.declineInvitation(i, s, f) },
         goToViewGroup,
@@ -89,7 +91,9 @@ fun HomeScreenRoute(
 fun HomeScreen(
     currentViewDefault: String,
     grps: StateFlow<List<TappGroup>>,
+    relistGroups: () -> Unit,
     invis: StateFlow<List<TappGroupInvitation>>,
+    relistInvitations: () -> Unit,
     acceptInvitation: (invite: TappGroupInvitation, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     declineInvitation: (invite: TappGroupInvitation, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     goToViewGroup: (TappGroup) -> Unit,
@@ -130,6 +134,7 @@ fun HomeScreen(
                     selected = currentView == viewGroups,
                     onClick = {
                         currentView = viewGroups
+                        relistGroups()
                     },
                     icon = {
                         Icon(
@@ -143,6 +148,7 @@ fun HomeScreen(
                     selected = currentView == viewInvitations,
                     onClick = {
                         currentView = viewInvitations
+                        relistInvitations()
                     },
                     icon = {
                         Icon(
@@ -333,7 +339,9 @@ fun HomeScreenMyGroupsPreview() {
     HomeScreen(
         viewGroups,
         MutableStateFlow(testGroups),
+        {},
         MutableStateFlow(testInvites),
+        {},
         { _, _, _ -> },
         { _, _, _ -> },
         {},
@@ -349,7 +357,9 @@ fun HomeScreenNoGroupsPreview() {
     HomeScreen(
         viewGroups,
         MutableStateFlow(emptyList()),
+        {},
         MutableStateFlow(testInvites),
+        {},
         { _, _, _ -> },
         { _, _, _ -> },
         {},
@@ -365,7 +375,9 @@ fun HomeScreenInvitationsPreview() {
     HomeScreen(
         viewInvitations,
         MutableStateFlow(testGroups),
+        {},
         MutableStateFlow(testInvites),
+        {},
         { _, _, _ -> },
         { _, _, _ -> },
         {},
@@ -381,7 +393,9 @@ fun HomeScreenNoInvitationsPreview() {
     HomeScreen(
         viewInvitations,
         MutableStateFlow(testGroups),
+        {},
         MutableStateFlow(emptyList()),
+        {},
         { _, _, _ -> },
         { _, _, _ -> },
         {},

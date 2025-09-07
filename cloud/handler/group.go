@@ -309,7 +309,6 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-
 }
 
 func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
