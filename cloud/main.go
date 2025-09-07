@@ -36,6 +36,11 @@ func main() {
 
 	handler.Initialize()
 
+	en, _ := os.ReadDir(env.FirebaseSvcKeyPath.Value())
+	for _, er := range en {
+		println(er.Name())
+	}
+
 	zerologr.Set(zerologr.New(&zerologr.Opts{
 		Console: env.LogToConsole.Value(),
 		Caller:  true,
