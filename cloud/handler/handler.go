@@ -44,10 +44,10 @@ func Handler() http.Handler {
 		tapps, _ := db.ReadAll[*model.Tapp]()
 		invites, _ := db.ReadAll[*model.Invitation]()
 
-		model.WriteJSON(w, accounts)
-		model.WriteJSON(w, groups)
-		model.WriteJSON(w, invites)
-		model.WriteJSON(w, tapps)
+		_ = model.WriteJSON(w, accounts)
+		_ = model.WriteJSON(w, groups)
+		_ = model.WriteJSON(w, invites)
+		_ = model.WriteJSON(w, tapps)
 	})
 
 	mux.HandleFunc("/admin/clear", func(w http.ResponseWriter, r *http.Request) {

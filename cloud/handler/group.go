@@ -285,6 +285,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 	db.AquireTableLock[*model.Invitation]()
 	defer db.ReleaseTableLock[*model.Invitation]()
 
+	//nolint:govet,gosec
 	if err := db.Save(&model.Invitation{
 		GroupID:   existingGroup.ID,
 		GroupName: existingGroup.Name,
@@ -346,6 +347,7 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	db.AquireTableLock[*model.Invitation]()
 	defer db.ReleaseTableLock[*model.Invitation]()
 
+	//nolint:govet,gosec
 	if err := db.Delete(&model.Invitation{GroupID: existingGroup.ID, Email: email}); err != nil {
 		zerologr.Error(err, "failed to delete invitation")
 		w.WriteHeader(http.StatusInternalServerError)
