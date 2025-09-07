@@ -24,7 +24,7 @@ var (
 
 const hashSize = 16
 
-func init() {
+func Initialize() {
 	authLock.Lock()
 	defer authLock.Unlock()
 	readAuthBlob()
