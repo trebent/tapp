@@ -93,7 +93,9 @@ func SimpleClear[T Simple](e T) error {
 }
 
 func getSimpleTableName[T Simple](e T) string {
-	return fmt.Sprintf("%s-%s.json", strings.ReplaceAll(reflect.TypeOf(e).String(), "*", ""), e.TableKey())
+	return fmt.Sprintf(
+		"%s-%s.json", strings.ReplaceAll(reflect.TypeOf(e).String(), "*", ""), e.TableKey(),
+	)
 }
 
 func getSimpleTablePath[T Simple](e T) string {
