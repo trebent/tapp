@@ -21,12 +21,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
+val testAccount = Account("testemail@domain.se", "pw", "some-tag")
+
+
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
     private val _loginState = MutableStateFlow(false)
 
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
     private var _account = MutableStateFlow(Account("", "", null))
+    val account = _account.asStateFlow()
     private val _token = MutableStateFlow<String?>(null)
 
     val isLoggedIn = _loginState.asStateFlow()
@@ -75,7 +79,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun getAccount(): StateFlow<Account> {
+    fun fetchAccount(): StateFlow<Account> {
         viewModelScope.launch {
             val response = accountService.getAccount(_token.value!!, _account.value.email)
             if (response.isSuccessful) {

@@ -19,9 +19,19 @@ import kotlinx.coroutines.launch
 val newTappGroup = TappGroup(0, "", "", "", "", emptyList(), emptyList())
 val testGroup =
     TappGroup(12, "group name", "❤️", "", "group description", emptyList(), emptyList())
+val testGroupOwner =
+    TappGroup(
+        12,
+        "group name",
+        "❤️",
+        testAccount.email,
+        "group description",
+        emptyList(),
+        emptyList()
+    )
 
 val testGroups = listOf(
-    TappGroup(1, "group1", "", "", "some words", emptyList(), emptyList()),
+    TappGroup(1, "group1", "", "", "some words", listOf(testAccount, testAccount), emptyList()),
     TappGroup(2, "group2", "", "", "some words", emptyList(), emptyList()),
     TappGroup(3, "group3", "", "", "some words", emptyList(), emptyList()),
     TappGroup(4, "group4", "", "", "some words", emptyList(), emptyList()),
@@ -112,6 +122,25 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             create(tappGroup, onSuccess, onFailure)
         } else {
             update(tappGroup, onSuccess, onFailure)
+        }
+    }
+
+    fun inviteToGroup(
+        email: String,
+        group: TappGroup,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        Log.i("GroupViewModel", "inviting user $email to group $group.id")
+        viewModelScope.launch {
+            val response = groupService.inviteToGroup(_token.value!!, group.id, email)
+            if (response.isSuccessful) {
+                list()
+                onSuccess()
+            } else {
+                Log.e("GroupViewModel", "failed to invite $email to group $group.id!")
+                onFailure()
+            }
         }
     }
 

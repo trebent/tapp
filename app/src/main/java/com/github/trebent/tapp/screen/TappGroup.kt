@@ -1,6 +1,7 @@
 package com.github.trebent.tapp.screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,19 +35,24 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,14 +61,39 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.github.trebent.tapp.R
+import com.github.trebent.tapp.api.Account
 import com.github.trebent.tapp.api.TappGroup
+import com.github.trebent.tapp.viewmodel.AccountViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.newTappGroup
+import com.github.trebent.tapp.viewmodel.testAccount
 import com.github.trebent.tapp.viewmodel.testGroup
+import com.github.trebent.tapp.viewmodel.testGroupOwner
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+
+@Composable
+fun TappGroupScreenRoute(
+    accountViewModel: AccountViewModel,
+    tappGroupViewModel: TappGroupViewModel,
+    goToEditGroup: (tappGroup: TappGroup) -> Unit,
+    goBack: () -> Unit
+) {
+    Log.i("TappGroupScreenRoute", "navigated")
+    TappGroupScreen(
+        0,
+        accountViewModel.account,
+        tappGroupViewModel.selectedGroup,
+        goToEditGroup,
+        { e, g, s, f -> tappGroupViewModel.inviteToGroup(e, g, s, f) },
+        { g, s, f -> tappGroupViewModel.leaveGroup(g, s, f) },
+        { g, e, s, f -> tappGroupViewModel.kickFromGroup(g, e, s, f) },
+        goBack,
+    )
+}
 
 @Composable
 fun EditTappGroupScreenRoute(
@@ -89,6 +122,8 @@ fun EditTappGroupScreen(
     goBackHome: () -> Unit
 ) {
     Log.i("EditTappGroupScreen", "rendering")
+
+    val context = LocalContext.current
 
     val selectedGroup = tappGroupStateFlow.collectAsState()
     val new = selectedGroup.value.id == 0
@@ -278,6 +313,11 @@ fun EditTappGroupScreen(
                 goBackHome()
             }, {
                 Log.e("EditTappGroupScreen", "failed to delete the group")
+                Toast.makeText(
+                    context,
+                    "Group could not be accepted, please try again.",
+                    Toast.LENGTH_SHORT
+                ).show()
             })
             showDeleteGroupDialog = false
         }, { showDeleteGroupDialog = false })
@@ -335,10 +375,186 @@ fun ConfirmTappGroupDeleteContent(onConfirm: () -> Unit, onCancel: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun ConfirmTappGroupDeleteDialogPreview() {
-    ConfirmTappGroupDeleteContent({}, {})
+fun ConfirmRemoveGroupMemberDialog(email: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        ConfirmRemoveGroupMemberContent(email, onConfirm, onCancel)
+    }
+}
+
+@Composable
+fun ConfirmRemoveGroupMemberContent(email: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Are you sure you want to remove $email from the group?")
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Cancel")
+            }
+            Button(
+                onClick = onConfirm,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Confirm")
+            }
+        }
+    }
+}
+
+@Composable
+@Preview
+fun ConfirmRemoveGroupMemberDialogPreview() {
+    ConfirmRemoveGroupMemberContent("email@test.se", {}, {})
+}
+
+@Composable
+fun ConfirmLeaveGroupDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        ConfirmLeaveGroupContent(onConfirm, onCancel)
+    }
+}
+
+@Composable
+fun ConfirmLeaveGroupContent(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Are you sure you want to leave the group?")
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Cancel")
+            }
+            Button(
+                onClick = onConfirm,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Confirm")
+            }
+        }
+    }
+}
+
+@Composable
+fun InviteToGroupDialog(onConfirm: (user: String) -> Unit, onCancel: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        InviteToGroupContent(onConfirm, onCancel)
+    }
+}
+
+@Composable
+fun InviteToGroupContent(onConfirm: (user: String) -> Unit, onCancel: () -> Unit) {
+    val focusManager = LocalFocusManager.current
+
+    var user by rememberSaveable { mutableStateOf("") }
+    var userError by rememberSaveable { mutableStateOf(false) }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Enter the tag or email of the user to invite:")
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            TextField(
+                value = user,
+                label = { Text("User tag or email") },
+                placeholder = { Text("Enter tag or email") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "",
+                    )
+                },
+                isError = userError,
+                onValueChange = { v: String ->
+                    userError = false
+                    user = v
+                    Log.i("InviteToGroupDialog", "entered text in user field: $user")
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (userError) {
+                Text(
+                    text = "user must be filled in",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Cancel")
+            }
+            Button(
+                onClick = {
+                    if (user.isEmpty()) {
+                        userError = true
+                    } else {
+                        onConfirm(user)
+                    }
+                },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Confirm")
+            }
+        }
+    }
 }
 
 @Composable
@@ -383,32 +599,32 @@ fun EmojiButton(emoji: String, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun EmojiPickerPreview() {
-    EmojiPickerContent({}, {})
-}
-
-@Composable
-fun TappGroupScreenRoute(
-    tappGroupViewModel: TappGroupViewModel,
-    goToEditGroup: (tappGroup: TappGroup) -> Unit,
-    goBack: () -> Unit
-) {
-    Log.i("TappGroupScreenRoute", "navigated")
-    TappGroupScreen(tappGroupViewModel.selectedGroup, goToEditGroup, goBack)
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TappGroupScreen(
+    currentTabIndex: Int,
+    accountStateFlow: StateFlow<Account>,
     tappGroupStateFlow: StateFlow<TappGroup>,
     goToEditGroup: (tappGroup: TappGroup) -> Unit,
+    inviteToGroup: (email: String, tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
+    leaveGroup: (tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
+    kickFromGroup: (tappGroup: TappGroup, email: String, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("TappGroupScreen", "rendering")
 
+    val context = LocalContext.current
+
+    var showLeaveGroupDialog by rememberSaveable { mutableStateOf(false) }
+    var showRemoveGroupMemberDialog by rememberSaveable { mutableStateOf(false) }
+    var showInviteUserDialog by rememberSaveable { mutableStateOf(false) }
+
     val selectedGroup = tappGroupStateFlow.collectAsState()
+    val account = accountStateFlow.collectAsState()
+
+    var currentTabIndex by rememberSaveable { mutableIntStateOf(currentTabIndex) }
+
+    var groupMemberEmailToRemove = ""
 
     Scaffold(
         topBar = {
@@ -431,17 +647,44 @@ fun TappGroupScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        Log.i(
-                            "TappGroupScreen",
-                            "clicked edit button, opening ${selectedGroup.value.id}: ${selectedGroup.value.name}"
-                        )
-                        goToEditGroup(selectedGroup.value)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Edit tapp group"
-                        )
+                    if (selectedGroup.value.owner == account.value.email) {
+                        IconButton(onClick = {
+                            Log.i(
+                                "TappGroupScreen",
+                                "clicked to add user to group ${selectedGroup.value.id}"
+                            )
+                            showInviteUserDialog = true
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.group_add),
+                                contentDescription = "invite user to group"
+                            )
+                        }
+                        IconButton(onClick = {
+                            Log.i(
+                                "TappGroupScreen",
+                                "clicked edit button, opening ${selectedGroup.value.id}: ${selectedGroup.value.name}"
+                            )
+                            goToEditGroup(selectedGroup.value)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Edit tapp group"
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = {
+                            Log.i(
+                                "TappGroupScreen",
+                                "clicked leave group button"
+                            )
+                            showLeaveGroupDialog = true
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.group_remove),
+                                contentDescription = "Leave tapp group"
+                            )
+                        }
                     }
                 }
             )
@@ -496,21 +739,138 @@ fun TappGroupScreen(
                 }
             }
             item(span = { GridItemSpan(4) }) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Text(
-                        "Tapp history",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(16.dp)
+                SecondaryTabRow(selectedTabIndex = currentTabIndex) {
+                    Tab(
+                        selected = currentTabIndex == 0,
+                        onClick = { currentTabIndex = 0 },
+                        text = { Text("Tapp history") }
                     )
-                    Text(
-                        "Tapp history goes here",
+                    Tab(
+                        selected = currentTabIndex == 1,
+                        onClick = { currentTabIndex = 1 },
+                        text = { Text("Members") }
                     )
                 }
             }
+            item(span = { GridItemSpan(4) }) {
+                // Content below the tabs
+                when (currentTabIndex) {
+                    0 -> Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Tapp history",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
+                    1 -> Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LazyColumn {
+
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    if (showInviteUserDialog) {
+        InviteToGroupDialog({ user ->
+            inviteToGroup(user, selectedGroup.value, {
+                Log.i(
+                    "TappGroupScreen",
+                    "successfully invited $user to group ${selectedGroup.value.id}"
+                )
+                showInviteUserDialog = false
+            }, {
+                Log.e(
+                    "TappGroupScreen",
+                    "failed to invite $user to group ${selectedGroup.value.id}"
+                )
+                Toast.makeText(
+                    context,
+                    "Failed to invite user to group, please try again.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                showInviteUserDialog = false
+            })
+        }, {
+            Log.i(
+                "TappGroupScreen",
+                "cancelled invite user dialog"
+            )
+            showInviteUserDialog = false
+        })
+    }
+
+    if (showLeaveGroupDialog) {
+        ConfirmLeaveGroupDialog(
+            {
+                Log.i(
+                    "TappGroupScreen",
+                    "confirmed to leave group ${selectedGroup.value.id}"
+                )
+                showLeaveGroupDialog = false
+
+                leaveGroup(selectedGroup.value, {
+                    Log.i("TappGroupScreen", "left group ${selectedGroup.value.id} successfully")
+                    goBack()
+                }, {
+                    Log.e("TappGroupScreen", "failed to leave group ${selectedGroup.value.id}")
+                    Toast.makeText(
+                        context,
+                        "Failed to leave group, please try again.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                })
+            }, {
+                Log.e("TappGroupScreen", "cancelled leaving the group")
+                showLeaveGroupDialog = false
+            }
+        )
+    }
+
+    if (showRemoveGroupMemberDialog) {
+        ConfirmRemoveGroupMemberDialog(
+            groupMemberEmailToRemove,
+            {
+                Log.i(
+                    "TappGroupScreen",
+                    "confirmed removal of user $groupMemberEmailToRemove from group ${selectedGroup.value.id}"
+                )
+                showRemoveGroupMemberDialog = false
+
+                leaveGroup(selectedGroup.value, {
+                    Log.i(
+                        "TappGroupScreen",
+                        "removed user $groupMemberEmailToRemove from group ${selectedGroup.value.id} successfully"
+                    )
+                    goBack()
+                }, {
+                    Log.e(
+                        "TappGroupScreen",
+                        "failed to remove user $groupMemberEmailToRemove from group ${selectedGroup.value.id}"
+                    )
+                    Toast.makeText(
+                        context,
+                        "Failed to remove user $groupMemberEmailToRemove, please try again.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                })
+            }, {
+                Log.i("TappGroupScreen", "cancelled removing the user")
+                showRemoveGroupMemberDialog = false
+            }
+        )
     }
 }
 
@@ -533,7 +893,61 @@ fun TappButton(emoji: String, onClick: () -> Unit, size: Dp, fontSize: TextUnit)
 @Preview
 @Composable
 fun TappGroupScreenPreview() {
-    TappGroupScreen(MutableStateFlow(testGroup).asStateFlow(), {}, {})
+    TappGroupScreen(
+        0,
+        MutableStateFlow(testAccount).asStateFlow(),
+        MutableStateFlow(testGroup).asStateFlow(),
+        {},
+        { g, e, s, f -> },
+        { g, s, f -> },
+        { g, e, s, f -> },
+        {}
+    )
+}
+
+@Preview
+@Composable
+fun TappGroupOwnerScreenPreview() {
+    TappGroupScreen(
+        0,
+        MutableStateFlow(testAccount).asStateFlow(),
+        MutableStateFlow(testGroupOwner).asStateFlow(),
+        {},
+        { g, e, s, f -> },
+        { g, s, f -> },
+        { g, e, s, f -> },
+        {}
+    )
+}
+
+@Preview
+@Composable
+fun TappGroupMemberScreenPreview() {
+    TappGroupScreen(
+        1,
+        MutableStateFlow(testAccount).asStateFlow(),
+        MutableStateFlow(testGroup).asStateFlow(),
+        {},
+        { g, e, s, f -> },
+        { g, s, f -> },
+        { g, e, s, f -> },
+        {}
+    )
+}
+
+@Preview
+@Composable
+fun TappGroupMemberOwnerScreenPreview() {
+    TappGroupScreen(
+        1,
+        MutableStateFlow(testAccount).asStateFlow(),
+        MutableStateFlow(testGroupOwner).asStateFlow(),
+        {},
+        { g, e, s, f -> },
+        { g, s, f -> },
+        { g, e, s, f -> },
+        {}
+    )
 }
 
 @Preview
@@ -544,7 +958,8 @@ fun NewGroupScreenPreview() {
         { g, s, f -> },
         { g, s, f -> },
         {},
-        {})
+        {}
+    )
 }
 
 @Preview
@@ -555,5 +970,32 @@ fun EditGroupScreenPreview() {
         { g, s, f -> },
         { g, s, f -> },
         {},
-        {})
+        {}
+    )
+}
+
+@Preview
+@Composable
+fun InviteToGroupDialogPreview() {
+    InviteToGroupContent({ s -> }, {})
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun ConfirmTappGroupDeleteDialogPreview() {
+    ConfirmTappGroupDeleteContent({}, {})
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun EmojiPickerPreview() {
+    EmojiPickerContent({}, {})
+}
+
+@Composable
+@Preview
+fun ConfirmLeaveGroupDialogPreview() {
+    ConfirmLeaveGroupContent({}, {})
 }

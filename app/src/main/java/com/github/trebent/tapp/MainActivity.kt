@@ -130,6 +130,7 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
             }
             composable("viewGroup") {
                 TappGroupScreenRoute(
+                    accountViewModel,
                     tappGroupViewModel,
                     goToEditGroup,
                     goBack,

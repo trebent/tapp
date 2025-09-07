@@ -57,7 +57,7 @@ fun AccountScreenRoute(
 ) {
     Log.i("AccountScreenRoute", "navigated")
     AccountScreen(
-        accountViewModel.getAccount(),
+        accountViewModel.fetchAccount(),
         { tag, s, f -> accountViewModel.updateTag(tag, s, f) },
         { password, s, f -> accountViewModel.updatePassword(password, s, f) },
         { s, f -> accountViewModel.deleteAccount(s, f) },
