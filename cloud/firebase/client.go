@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"sync"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/messaging"
+	firebase "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4/messaging"
 	"github.com/trebent/tapp-backend/env"
 	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
