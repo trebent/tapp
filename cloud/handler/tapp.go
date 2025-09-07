@@ -107,6 +107,9 @@ func handleTappGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(tapps) > 100 {
+		tapps = tapps[:100]
+	}
 	tapps = slices.DeleteFunc(tapps, func(t *model.Tapp) bool { return t.GroupID != group.ID })
 
 	//nolint:gosec,govet

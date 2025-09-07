@@ -45,6 +45,10 @@ data class Tapp(
     }
 }
 
+fun sortedTapps(inputTapps: List<Tapp>): List<Tapp> {
+    return inputTapps.sortedByDescending { it.time }
+}
+
 interface GroupService {
     @GET("/groups")
     suspend fun listGroups(@Header("Authorization") token: String): Response<List<TappGroup>>

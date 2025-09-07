@@ -9,6 +9,7 @@ import com.github.trebent.tapp.api.Tapp
 import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.api.TappGroupInvitation
 import com.github.trebent.tapp.api.groupService
+import com.github.trebent.tapp.api.sortedTapps
 import com.github.trebent.tapp.dataStore
 import com.github.trebent.tapp.tokenkey
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -122,7 +123,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun tapp(a: Account) {
         Log.i("GroupViewModel", "tapped group! ${selectedGroup.value.id}")
         val t = Tapp(selectedGroup.value.id, System.currentTimeMillis(), a)
-        _tapps.value += t
+        _tapps.value = listOf(t) + _tapps.value
         viewModelScope.launch {
             val response = groupService.createTapp(_token.value!!, selectedGroup.value.id)
             if (!response.isSuccessful) {
@@ -136,7 +137,8 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         viewModelScope.launch {
             val response = groupService.listTapps(_token.value!!, selectedGroup.value.id)
             if (response.isSuccessful) {
-                _tapps.value = response.body()!!
+                _tapps.value = sortedTapps(response.body()!!)
+                Log.i("GroupViewModel", "listed ${_tapps.value.size} tapps!")
             } else {
                 Log.e("GroupViewModel", "failed to list tapps for group ${selectedGroup.value.id}")
             }

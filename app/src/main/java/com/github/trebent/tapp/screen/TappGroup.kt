@@ -784,8 +784,18 @@ fun TappGroupScreen(
                     // Content below the tabs
                     when (currentTabIndex) {
                         0 ->
-                            for (tapp in tapps.value) {
-                                TappRow(tapp)
+                            if (selectedGroup.value.memberCount() == 0) {
+                                Text(
+                                    text = "There are no tapps yet, get tapping!",
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                )
+                            } else {
+                                for (tapp in tapps.value) {
+                                    TappRow(tapp)
+                                }
                             }
 
                         1 ->

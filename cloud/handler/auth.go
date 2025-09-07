@@ -4,18 +4,32 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/trebent/tapp-backend/db"
+	"github.com/trebent/tapp-backend/env"
 	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
 )
 
 //nolint:gochecknoglobals
-var authMap = sync.Map{}
+var (
+	authLock = sync.Mutex{}
+	authBlob = map[string]string{}
+)
 
 const hashSize = 16
+
+func init() {
+	authLock.Lock()
+	defer authLock.Unlock()
+	readAuthBlob()
+	zerologr.Info("booted with auth blob", "blob", authBlob)
+}
 
 func authenticated(w http.ResponseWriter, r *http.Request) bool {
 	if getUserEmailFromToken(r) == "" {
@@ -32,9 +46,10 @@ func getUserEmailFromToken(r *http.Request) string {
 }
 
 func getTokenValue(token string) string {
-	if val, ok := authMap.Load(token); ok {
-		//nolint:errcheck
-		return val.(string)
+	authLock.Lock()
+	defer authLock.Unlock()
+	if val, ok := authBlob[token]; ok {
+		return val
 	}
 
 	return ""
@@ -65,7 +80,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hash := newHash()
-	authMap.Store(hash, body.Email)
+	authLock.Lock()
+	defer authLock.Unlock()
+	authBlob[hash] = body.Email
 
 	w.Header().Set("Authorization", hash)
 	w.WriteHeader(http.StatusNoContent)
@@ -73,8 +90,38 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
-	authMap.Delete(token)
+	authLock.Lock()
+	defer authLock.Unlock()
+	delete(authBlob, token)
+	writeAuthBlob()
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func writeAuthBlob() {
+	fp := filepath.Join(env.FileSystem.Value(), "authblob.json")
+
+	data, err := json.Marshal(authBlob)
+	if err != nil {
+		zerologr.Error(err, "failed to serialize auth blob data")
+	} else {
+		err := os.WriteFile(fp, data, 0o755)
+		if err != nil {
+			zerologr.Error(err, "failed to write auth blob to file")
+		}
+	}
+}
+
+func readAuthBlob() {
+	fp := filepath.Join(env.FileSystem.Value(), "authblob.json")
+
+	data, err := os.ReadFile(fp)
+	if err != nil {
+		zerologr.Error(err, "failed to read auth blob file")
+	} else {
+		if err := json.Unmarshal(data, &authBlob); err != nil {
+			zerologr.Error(err, "failed to write auth blob to file")
+		}
+	}
 }
 
 func newHash() string {
