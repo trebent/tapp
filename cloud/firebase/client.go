@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -37,12 +36,14 @@ func Initialize() {
 
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
-		log.Fatalf("Error initializing Firebase: %v", err)
+		zerologr.Error(err, "failed to create new app")
+		os.Exit(1)
 	}
 
 	client, err := app.Messaging(ctx)
 	if err != nil {
-		log.Fatalf("Error getting Firebase Messaging client: %v", err)
+		zerologr.Error(err, "failed to create messaging app")
+		os.Exit(1)
 	}
 
 	c = client
