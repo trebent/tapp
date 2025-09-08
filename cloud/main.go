@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/trebent/envparser"
 	"github.com/trebent/tapp-backend/env"
 	"github.com/trebent/tapp-backend/firebase"
@@ -35,6 +36,8 @@ func main() {
 	// ExitOnError is set to true, so this will exit on error.
 	_ = env.Parse()
 
+	zerologr.SetMessageFieldName("message")
+	zerolog.LevelFieldName = "severity"
 	zerologr.Set(zerologr.New(&zerologr.Opts{
 		Console: env.LogToConsole.Value(),
 		Caller:  true,
