@@ -96,6 +96,7 @@ fun TappGroupScreenRoute(
         tappGroupViewModel.selectedGroup,
         { tappGroupViewModel.refreshSelectedGroup() },
         tappGroupViewModel.listTapps(),
+        { tappGroupViewModel.listTapps() },
         { tappGroupViewModel.tapp(asf.value) },
         goToEditGroup,
         { e, g, s, f -> tappGroupViewModel.inviteToGroup(e, g, s, f) },
@@ -620,6 +621,7 @@ fun TappGroupScreen(
     tappGroupStateFlow: StateFlow<TappGroup>,
     refreshSelectedGroup: () -> Unit,
     tappStateFlow: StateFlow<List<Tapp>>,
+    refreshTapps: () -> Unit,
     onTapp: () -> Unit,
     goToEditGroup: (tappGroup: TappGroup) -> Unit,
     inviteToGroup: (email: String, tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
@@ -762,6 +764,7 @@ fun TappGroupScreen(
                         selected = currentTabIndex == 0,
                         onClick = {
                             currentTabIndex = 0
+                            refreshTapps()
                         },
                         text = { Text("Tapp history") }
                     )
@@ -1024,6 +1027,7 @@ fun TappGroupScreenPreview() {
         MutableStateFlow(testTapps).asStateFlow(),
         {},
         {},
+        {},
         { g, e, s, f -> },
         { g, s, f -> },
         { g, e, s, f -> },
@@ -1040,6 +1044,7 @@ fun TappGroupOwnerScreenPreview() {
         MutableStateFlow(testGroupOwner).asStateFlow(),
         {},
         MutableStateFlow(testTapps).asStateFlow(),
+        {},
         {},
         {},
         { g, e, s, f -> },
@@ -1060,6 +1065,7 @@ fun TappGroupMemberScreenPreview() {
         MutableStateFlow(testTapps).asStateFlow(),
         {},
         {},
+        {},
         { g, e, s, f -> },
         { g, s, f -> },
         { g, e, s, f -> },
@@ -1078,6 +1084,7 @@ fun TappGroupNoMemberOwnerScreenPreview() {
         MutableStateFlow(testTapps).asStateFlow(),
         {},
         {},
+        {},
         { g, e, s, f -> },
         { g, s, f -> },
         { g, e, s, f -> },
@@ -1094,6 +1101,7 @@ fun TappGroupMemberOwnerScreenPreview() {
         MutableStateFlow(testGroupOwner).asStateFlow(),
         {},
         MutableStateFlow(testTapps).asStateFlow(),
+        {},
         {},
         {},
         { g, e, s, f -> },

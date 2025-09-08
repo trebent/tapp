@@ -33,6 +33,7 @@ class TappNotificationService : FirebaseMessagingService() {
 
             // Determine no-handling
             if (email == sender) {
+                Log.d("TappNotificationService", "Sender is me, discarding")
                 return
             }
         }
