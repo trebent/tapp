@@ -128,7 +128,7 @@ func getFCMS(group *model.Group) []string {
 	return fcms
 }
 
-func writeBlob() {
+func readBlob() {
 	data, err := os.ReadFile(filepath.Join(env.FileSystem.Value(), "fcm-blob.json"))
 	if err != nil {
 		zerologr.Error(err, "failed to read from FCM blob")
@@ -141,7 +141,7 @@ func writeBlob() {
 	}
 }
 
-func readBlob() {
+func writeBlob() {
 	data, err := json.Marshal(fcmBlob)
 	if err != nil {
 		zerologr.Error(err, "failed to serialize FCM update")

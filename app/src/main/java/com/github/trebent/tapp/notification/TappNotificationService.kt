@@ -23,12 +23,17 @@ class TappNotificationService : FirebaseMessagingService() {
         remoteMessage.data.let { data ->
             val sender = data["sender"]
             val groupId = data["group_id"]
-            Log.d("FCM", "Data received: sender=$sender group=$groupId")
+            Log.d("TappNotificationService", "Data received: sender=$sender group=$groupId")
             // Update UI or app logic if needed
         }
 
         // Notification payload
         remoteMessage.notification?.let {
+            Log.d(
+                "TappNotificationService",
+                "Notification received: title=${it.title} body=${it.body}"
+            )
+
             showNotification(
                 it.title ?: "Got a new Tapp!",
                 it.body ?: "Open the Tapp app to view it"
@@ -68,10 +73,10 @@ class TappNotificationService : FirebaseMessagingService() {
         val notificationManager =
             getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val channelId = "default_channel"
+        val channelId = "tapp_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
-                NotificationChannel(channelId, "Default", NotificationManager.IMPORTANCE_HIGH)
+                NotificationChannel(channelId, "Tapp", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
 
