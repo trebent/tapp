@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import com.github.trebent.tapp.R
 import com.github.trebent.tapp.api.accountService
 import com.github.trebent.tapp.dataStore
+import com.github.trebent.tapp.emailkey
 import com.github.trebent.tapp.tokenkey
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -19,12 +20,21 @@ class TappNotificationService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        // Data payload
-        remoteMessage.data.let { data ->
-            val sender = data["sender"]
-            val groupId = data["group_id"]
-            Log.d("TappNotificationService", "Data received: sender=$sender group=$groupId")
-            // Update UI or app logic if needed
+        Log.d("TappNotificationService", "Message received")
+        if (!remoteMessage.data.isEmpty()) {
+            val sender: String
+            remoteMessage.data.let { data ->
+                sender = data["sender"]!!
+            }
+
+            val email = runBlocking {
+                applicationContext.dataStore.data.first()[emailkey]
+            }
+
+            // Determine no-handling
+            if (email == sender) {
+                return
+            }
         }
 
         // Notification payload
