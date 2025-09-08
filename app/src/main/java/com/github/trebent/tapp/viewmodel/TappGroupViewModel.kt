@@ -10,6 +10,7 @@ import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.api.TappGroupInvitation
 import com.github.trebent.tapp.api.groupService
 import com.github.trebent.tapp.api.sortedTapps
+import com.github.trebent.tapp.notification.TappNotificationEvents
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -105,7 +106,15 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
 
     init {
         Log.i("GroupViewModel", "initialising the group view model")
+
         _i.value = true
+        viewModelScope.launch {
+            TappNotificationEvents.events.collect { tapp ->
+                Log.i("GroupViewModel", "running tapp notification event collector")
+
+                _tapps.value = listOf(tapp) + _tapps.value
+            }
+        }
     }
 
     fun setTokenGetter(getter: () -> String) {

@@ -6,14 +6,24 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.github.trebent.tapp.R
+import com.github.trebent.tapp.api.Account
+import com.github.trebent.tapp.api.Tapp
 import com.github.trebent.tapp.api.accountService
 import com.github.trebent.tapp.dataStore
 import com.github.trebent.tapp.emailkey
 import com.github.trebent.tapp.tokenkey
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+
+object TappNotificationEvents {
+    val events = MutableSharedFlow<Tapp>()
+}
 
 class TappNotificationService : FirebaseMessagingService() {
 
@@ -23,8 +33,14 @@ class TappNotificationService : FirebaseMessagingService() {
         Log.d("TappNotificationService", "Message received")
         if (!remoteMessage.data.isEmpty()) {
             val sender: String
+            val senderTag: String
+            val time: String
+            val groupId: String
             remoteMessage.data.let { data ->
                 sender = data["sender"]!!
+                senderTag = data["sender_tag"]!!
+                time = data["time"]!!
+                groupId = data["group_id"]!!
             }
 
             val email = runBlocking {
@@ -36,7 +52,18 @@ class TappNotificationService : FirebaseMessagingService() {
                 Log.d("TappNotificationService", "Sender is me, discarding")
                 return
             }
+
+            CoroutineScope(Dispatchers.Default).launch {
+                TappNotificationEvents.events.emit(
+                    Tapp(
+                        groupId.toInt(),
+                        time.toLong(),
+                        Account(sender, "", senderTag)
+                    )
+                )
+            }
         }
+
 
         // Notification payload
         remoteMessage.notification?.let {
