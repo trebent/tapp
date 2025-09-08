@@ -37,6 +37,7 @@ func main() {
 	_ = env.Parse()
 
 	zerologr.SetMessageFieldName("message")
+	//nolint:reassign
 	zerolog.LevelFieldName = "severity"
 	zerologr.Set(zerologr.New(&zerologr.Opts{
 		Console: env.LogToConsole.Value(),
