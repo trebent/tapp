@@ -78,7 +78,7 @@ func Remove(email string) {
 func Send(sender string, group *model.Group) {
 	zerologr.Info(
 		fmt.Sprintf(
-			"%s is notifying group %s with id %d", sender, group.Name, strconv.Itoa(group.ID),
+			"%s is notifying group %s with id %d", sender, group.Name, group.ID,
 		),
 	)
 
