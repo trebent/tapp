@@ -41,25 +41,25 @@ class TappNotificationService : FirebaseMessagingService() {
         }
     }
 
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
+    override fun onNewToken(newToken: String) {
+        super.onNewToken(newToken)
         Log.i(
             "TappNotificationService",
             "FCM token has changed, checking email preferences before sending..."
         )
 
-        val token = runBlocking {
+        val cloudToken = runBlocking {
             applicationContext.dataStore.data.first()[tokenkey]
         }
 
-        if (token != null) {
+        if (cloudToken != null) {
             Log.i(
                 "TappNotificationService",
-                "Found token preference, updating backend..."
+                "Found cloud token preference, updating backend..."
             )
 
             runBlocking {
-                val response = accountService.pushFCM(token, token)
+                val response = accountService.pushFCM(newToken, cloudToken)
                 if (response.isSuccessful) {
                     Log.i("TappNotificationService", "FCM update successful")
                 } else {
