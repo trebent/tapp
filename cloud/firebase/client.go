@@ -75,18 +75,20 @@ func Remove(email string) {
 	zerologr.Info("wrote to FCM blob", "blob", fcmBlob)
 }
 
-func Send(sender string, group *model.Group) {
+func Send(group *model.Group, tapp *model.Tapp) {
 	zerologr.Info(
 		fmt.Sprintf(
-			"%s is notifying group %s with id %d", sender, group.Name, group.ID,
+			"%s is notifying group %s with id %d", tapp.User.Email, group.Name, group.ID,
 		),
 	)
 
 	_, err := c.SendEachForMulticast(context.Background(), &messaging.MulticastMessage{
 		Tokens: getFCMS(group),
 		Data: map[string]string{
-			"sender":   sender,
-			"group_id": strconv.Itoa(group.ID),
+			"time":       strconv.Itoa(int(tapp.Time)),
+			"sender_tag": tapp.User.Tag,
+			"sender":     tapp.User.Email,
+			"group_id":   strconv.Itoa(group.ID),
 		},
 		Notification: &messaging.Notification{
 			Title: fmt.Sprintf("Group %s was tapped!", group.Name),

@@ -49,13 +49,13 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go firebase.Send(email, group)
-
 	newTapp := &model.Tapp{
 		Time:    time.Now().Local().UnixMilli(),
 		GroupID: group.ID,
 		User:    &model.Account{Email: email, Tag: account.Tag},
 	}
+	go firebase.Send(group, newTapp)
+
 	db.SimpleAcquire(newTapp)
 	defer db.SimpleRelease(newTapp)
 
