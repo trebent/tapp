@@ -1,6 +1,7 @@
 package com.github.trebent.tapp.notification
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Intent
 import android.util.Log
 import androidx.annotation.RequiresPermission
@@ -33,6 +34,17 @@ const val CHANNEL_ID = "tapp_channel"
 
 class TappNotificationService : FirebaseMessagingService() {
 
+    /**
+     * Determine notification dispatching and tapp event topic update. Both depend on the foreground
+     * status of Tapp.
+     *  - If Tapp is in the background, a notification is shown that is *clickable*.
+     *  - If Tapp is in the foreground, the notification still shows but is NOT clickable.
+     *  - A notification originating from an event that the current user triggered will NOT lead
+     *    to a notification on the triggering device.
+     *  - The Tapp event update depends on if the application is in the foreground, since the only
+     *    side-effects of an event-dispatch is that the Tapp is added to the tapp group view model
+     *    list of tapps.
+     */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
@@ -79,6 +91,10 @@ class TappNotificationService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Update the Tapp backend with the device FCM. Each FCM is used to map which device should
+     * receive a notification. The FCM is mapped to one or more group IDs in the Tapp backend.
+     */
     override fun onNewToken(newToken: String) {
         super.onNewToken(newToken)
         Log.i(
@@ -107,6 +123,10 @@ class TappNotificationService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Show a notification on screen. This is called from the message receiver. A notification will
+     * only be shown if Tapp is NOT in the foreground.
+     */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(title: String, message: String) {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -116,9 +136,13 @@ class TappNotificationService : FirebaseMessagingService() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setAutoCancel(true)
 
+        // Only make the noficiation clickable when Tapp is not in the foreground.
         if (!Tapplication.isInForeground) {
-            val intent: Intent = Intent(this, MainActivity::class)
-            builder.setContentIntent(intent)
+            val intent = Intent(this, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            builder.setContentIntent(pendingIntent)
         }
 
         NotificationManagerCompat.from(this)
