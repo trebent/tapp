@@ -48,6 +48,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * Account screen route
+ *
+ * @param accountViewModel
+ * @param goToLogin
+ * @param goBack
+ */
 @ExperimentalMaterial3Api
 @Composable
 fun AccountScreenRoute(
@@ -67,6 +74,17 @@ fun AccountScreenRoute(
     )
 }
 
+/**
+ * Account screen
+ *
+ * @param account
+ * @param updateTag
+ * @param updatePassword
+ * @param deleteAccount
+ * @param logout
+ * @param goToLogin
+ * @param goBack
+ */
 @ExperimentalMaterial3Api
 @Composable
 fun AccountScreen(
@@ -317,6 +335,13 @@ fun AccountScreen(
     }
 }
 
+/**
+ * Confirm account delete dialog
+ *
+ * @param onDismiss
+ * @param deleteAccount
+ * @param goToLogin
+ */
 @Composable
 fun ConfirmAccountDeleteDialog(
     onDismiss: () -> Unit,
@@ -328,6 +353,13 @@ fun ConfirmAccountDeleteDialog(
     }
 }
 
+/**
+ * Confirm account delete content
+ *
+ * @param onDismiss
+ * @param deleteAccount
+ * @param goToLogin
+ */
 @Composable
 fun ConfirmAccountDeleteContent(
     onDismiss: () -> Unit,
@@ -374,12 +406,20 @@ fun ConfirmAccountDeleteContent(
     }
 }
 
+/**
+ * Confirm account delete dialog preview.
+ *
+ */
 @Preview
 @Composable
 fun ConfirmAccountDeleteDialogPreview() {
     ConfirmAccountDeleteContent({}, { s, f -> }, {})
 }
 
+/**
+ * Account screen preview
+ *
+ */
 @ExperimentalMaterial3Api
 @Preview
 @Composable

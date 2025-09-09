@@ -1,3 +1,8 @@
+/**
+ * This file contains UI composables for the home screen, where groups are listed, and the user
+ * can create new groups. The navigation also allows the user to visit their account management
+ * screen.
+ */
 package com.github.trebent.tapp.screen
 
 import android.util.Log
@@ -62,6 +67,14 @@ import kotlinx.coroutines.flow.StateFlow
 const val viewGroups = "groups"
 const val viewInvitations = "invitations"
 
+/**
+ * Home screen route
+ *
+ * @param tappGroupViewModel
+ * @param goToViewGroup
+ * @param goToEditGroup
+ * @param goToAccount
+ */
 @ExperimentalMaterial3Api
 @Composable
 fun HomeScreenRoute(
@@ -86,6 +99,20 @@ fun HomeScreenRoute(
     )
 }
 
+/**
+ * Home screen
+ *
+ * @param currentViewDefault
+ * @param grps
+ * @param relistGroups
+ * @param invis
+ * @param relistInvitations
+ * @param acceptInvitation
+ * @param declineInvitation
+ * @param goToViewGroup
+ * @param goToEditGroup
+ * @param goToAccount
+ */
 @ExperimentalMaterial3Api
 @Composable
 fun HomeScreen(
@@ -223,6 +250,12 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Tapp group row, a composable showing each tapp group the user is a member or owner of.
+ *
+ * @param tappGroup
+ * @param openGroup
+ */
 @Composable
 fun TappGroupRow(tappGroup: TappGroup, openGroup: (tappGroup: TappGroup) -> Unit) {
     OutlinedButton(
@@ -252,6 +285,13 @@ fun TappGroupRow(tappGroup: TappGroup, openGroup: (tappGroup: TappGroup) -> Unit
     }
 }
 
+/**
+ * Tapp group invite row, a composable showing each tapp group the user is invited to join.
+ *
+ * @param invite
+ * @param accept
+ * @param decline
+ */
 @Composable
 fun TappGroupInviteRow(
     invite: TappGroupInvitation,
@@ -332,6 +372,10 @@ fun TappGroupInviteRow(
     }
 }
 
+/**
+ * Home screen my groups preview
+ *
+ */
 @ExperimentalMaterial3Api
 @Preview
 @Composable
@@ -350,6 +394,10 @@ fun HomeScreenMyGroupsPreview() {
     )
 }
 
+/**
+ * Home screen no groups preview
+ *
+ */
 @ExperimentalMaterial3Api
 @Preview
 @Composable
@@ -368,6 +416,10 @@ fun HomeScreenNoGroupsPreview() {
     )
 }
 
+/**
+ * Home screen invitations preview
+ *
+ */
 @ExperimentalMaterial3Api
 @Preview
 @Composable
@@ -386,6 +438,10 @@ fun HomeScreenInvitationsPreview() {
     )
 }
 
+/**
+ * Home screen no invitations preview
+ *
+ */
 @ExperimentalMaterial3Api
 @Preview
 @Composable

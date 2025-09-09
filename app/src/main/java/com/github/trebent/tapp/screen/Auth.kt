@@ -1,3 +1,7 @@
+/**
+ * This file handles everything screen-related to authentication handling. Including sign up and
+ * login/logout UI componennts.
+ */
 package com.github.trebent.tapp.screen
 
 import android.util.Log
@@ -41,6 +45,13 @@ import com.github.trebent.tapp.viewmodel.AccountViewModel
 val emailRegex = Regex("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
 
 
+/**
+ * Signup screen route
+ *
+ * @param accountViewModel
+ * @param onCancel
+ * @param onSignedUp
+ */
 @Composable
 fun SignupScreenRoute(
     accountViewModel: AccountViewModel,
@@ -58,6 +69,13 @@ fun SignupScreenRoute(
     )
 }
 
+/**
+ * Signup screen
+ *
+ * @param onSignup
+ * @param onCancel
+ * @param onSignedUp
+ */
 @Composable
 fun SignupScreen(
     onSignup: (t: String, e: String, p: String, onSuccess: () -> Unit, onFailure: () -> Unit) -> Unit,
@@ -244,12 +262,13 @@ fun SignupScreen(
     }
 }
 
-@Preview
-@Composable
-fun SignupScreenPreview() {
-    SignupScreen({ t, e, p, s, f -> }, {}, {})
-}
-
+/**
+ * Login screen route
+ *
+ * @param accountViewModel
+ * @param onSignup
+ * @param onLogin
+ */
 @Composable
 fun LoginScreenRoute(
     accountViewModel: AccountViewModel,
@@ -415,6 +434,20 @@ fun LoginScreen(
     }
 }
 
+/**
+ * Signup screen preview
+ *
+ */
+@Preview
+@Composable
+fun SignupScreenPreview() {
+    SignupScreen({ t, e, p, s, f -> }, {}, {})
+}
+
+/**
+ * Login screen preview
+ *
+ */
 @Preview
 @Composable
 fun LoginScreenPreview() {
