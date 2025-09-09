@@ -1,11 +1,14 @@
 package com.github.trebent.tapp.notification
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.os.Build
+import android.Manifest
+import android.content.Intent
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.github.trebent.tapp.MainActivity
 import com.github.trebent.tapp.R
+import com.github.trebent.tapp.Tapplication
 import com.github.trebent.tapp.api.Account
 import com.github.trebent.tapp.api.Tapp
 import com.github.trebent.tapp.api.accountService
@@ -25,6 +28,9 @@ object TappNotificationEvents {
     val events = MutableSharedFlow<Tapp>()
 }
 
+const val NOTIFICATION_GROUP_KEY = "com.github.trebent.tapp"
+const val CHANNEL_ID = "tapp_channel"
+
 class TappNotificationService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -32,11 +38,15 @@ class TappNotificationService : FirebaseMessagingService() {
 
         Log.d("TappNotificationService", "Message received")
         if (!remoteMessage.data.isEmpty()) {
+            val title: String
+            val body: String
             val sender: String
             val senderTag: String
             val time: String
             val groupId: String
             remoteMessage.data.let { data ->
+                title = data["title"]!!
+                body = data["body"]!!
                 sender = data["sender"]!!
                 senderTag = data["sender_tag"]!!
                 time = data["time"]!!
@@ -47,35 +57,25 @@ class TappNotificationService : FirebaseMessagingService() {
                 applicationContext.dataStore.data.first()[emailkey]
             }
 
-            // Determine no-handling
+            // Determine noop
             if (email == sender) {
                 Log.d("TappNotificationService", "Sender is me, discarding")
                 return
             }
 
-            CoroutineScope(Dispatchers.Default).launch {
-                TappNotificationEvents.events.emit(
-                    Tapp(
-                        groupId.toInt(),
-                        time.toLong(),
-                        Account(sender, "", senderTag)
+            if (Tapplication.isInForeground) {
+                CoroutineScope(Dispatchers.Default).launch {
+                    TappNotificationEvents.events.emit(
+                        Tapp(
+                            groupId.toInt(),
+                            time.toLong(),
+                            Account(sender, "", senderTag)
+                        )
                     )
-                )
+                }
             }
-        }
 
-
-        // Notification payload
-        remoteMessage.notification?.let {
-            Log.d(
-                "TappNotificationService",
-                "Notification received: title=${it.title} body=${it.body}"
-            )
-
-            showNotification(
-                it.title ?: "Got a new Tapp!",
-                it.body ?: "Open the Tapp app to view it"
-            )
+            showNotification(title, body)
         }
     }
 
@@ -107,24 +107,21 @@ class TappNotificationService : FirebaseMessagingService() {
         }
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(title: String, message: String) {
-        val notificationManager =
-            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
-        val channelId = "tapp_channel"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel =
-                NotificationChannel(channelId, "Tapp", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val notification = NotificationCompat.Builder(this, channelId)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setGroup(NOTIFICATION_GROUP_KEY)
             .setContentTitle(title)
             .setContentText(message)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setAutoCancel(true)
-            .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        if (!Tapplication.isInForeground) {
+            val intent: Intent = Intent(this, MainActivity::class)
+            builder.setContentIntent(intent)
+        }
+
+        NotificationManagerCompat.from(this)
+            .notify(System.currentTimeMillis().toInt(), builder.build())
     }
 }
