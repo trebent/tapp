@@ -15,6 +15,11 @@ import java.util.Date
 import java.util.Locale
 
 
+/**
+ * A Tapp ground is a collection of users that can "Tapp" each other. The group owner is the only
+ * person that is allowed to change the group properties and invite new members. Members may only
+ * "Tapp" the group, which means to notify them.
+ */
 data class TappGroup(
     val id: Int,
     val name: String,
@@ -27,16 +32,29 @@ data class TappGroup(
     fun memberCount(): Int = members?.size ?: 0
 }
 
+/**
+ * This is a utility class to simplify invitation handling. This object is only ever used to have a
+ * singular endpoint to list all invitations related to a given user. The invitations per group is
+ * also maintained inside each Tapp group object, but is not used for UI elements.
+ */
 data class TappGroupInvitation(
     @SerializedName("group_id") val groupId: Int,
     @SerializedName("group_name") val groupName: String,
     val email: String,
 )
 
+// datetime visalisation conversion formatter.
 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
+/**
+ * The whole point of this Tapplication, a Tapp! A Tapp is an object capturing the moment a user
+ * pressed the "Tapp" button in a given group. It has a timestamp, a group ID and a user link. A
+ * Tapp captures a user's tag (if there is one) at the time of the Tapp. If the user updates their
+ * tag and tapps again, the old Tapps will still show the old user tag.
+ */
 data class Tapp(
     @SerializedName("group_id") val groupId: Int,
+    // Time in UNIX millis format for sorting and serialization simplicity.
     val time: Long,
     val user: Account
 ) {
@@ -45,10 +63,17 @@ data class Tapp(
     }
 }
 
+/**
+ * Sort a list of Tapps in descending order, with the latest date first.
+ */
 fun sortedTapps(inputTapps: List<Tapp>): List<Tapp> {
     return inputTapps.sortedByDescending { it.time }
 }
 
+/**
+ * The group service handles the administrative aspect of the Tapplictation. It lets users create,
+ * update, list, get, and delete (etc.) groups. Group user management is also here.
+ */
 interface GroupService {
     @GET("/groups")
     suspend fun listGroups(@Header("Authorization") token: String): Response<List<TappGroup>>

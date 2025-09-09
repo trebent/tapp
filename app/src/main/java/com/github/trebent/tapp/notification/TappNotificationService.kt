@@ -69,7 +69,7 @@ class TappNotificationService : FirebaseMessagingService() {
                 applicationContext.dataStore.data.first()[emailkey]
             }
 
-            // Determine noop
+            // Determine noop, if I am the sender, I don't need a notification.
             if (email == sender) {
                 Log.d("TappNotificationService", "Sender is me, discarding")
                 return
@@ -81,6 +81,9 @@ class TappNotificationService : FirebaseMessagingService() {
                         Tapp(
                             groupId.toInt(),
                             time.toLong(),
+                            // A Tapp has a companion object that will determine if the email or tag
+                            // is to be used for the tapp listing. The tag will be preferred if it
+                            // exists.
                             Account(sender, "", senderTag)
                         )
                     )
