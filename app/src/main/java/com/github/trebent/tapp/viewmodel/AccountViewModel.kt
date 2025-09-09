@@ -1,3 +1,8 @@
+/**
+ * This file contains the implementation of the Tapplication's account view model. All UI components
+ * that show any element related to the user's login and account status derives its information from
+ * here.
+ */
 package com.github.trebent.tapp.viewmodel
 
 
@@ -22,24 +27,46 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
+/*
+Test declarations, used for preview composables.
+ */
 val testAccount = Account("testemail@domain.se", "pw", "superman")
 val testAccountTag2 = Account("testemail@domain.se", "pw", "taggy")
 val testAccountWithNullTag = Account("someone@domain.se", "pw", null)
 val testAccountWithEmptyTag = Account("else@domain.se", "pw", "")
 
-
+/**
+ * Account view model
+ *
+ * @constructor
+ *
+ * @param application
+ */
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
     val initialised = _i.asStateFlow()
 
+    // The user's currently logged in account info.
     private var _account = MutableStateFlow(Account("", "", null))
     val account = _account.asStateFlow()
 
+    // If the user is logged in or not.
     private val _loginState = MutableStateFlow(false)
-    private val _token = MutableStateFlow("")
     val isLoggedIn = _loginState.asStateFlow()
 
+    // The sign in token, used to authenticate any outgoing request that requires the used to be
+    // logged in.
+    private val _token = MutableStateFlow("")
+
+    /**
+     * The view model's init:
+     * 1. Checks if the user is logged in. If true, fetches the user's account information.
+     * 2. Subscribes to preferences related to tapp. Preferences are used to store email and the
+     *    auth token for knowing on app boot if the user is already signed in.
+     * 3. If the user is signed in, the user's device FCM is reported to the Tapp backend to continue
+     *    to be able to receive accurate notifications.
+     */
     init {
         Log.i("AccountViewModel", "initialising the auth view model")
         viewModelScope.launch {
@@ -98,10 +125,20 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Get token for outgoing HTTP requests.
+     *
+     * @return the auth token for outgoing requests
+     */
     fun getToken(): String {
         return _token.value
     }
 
+    /**
+     * Fetch account that's currently signed in.
+     *
+     * @return a stateful of the user account
+     */
     fun fetchAccount(): StateFlow<Account> {
         viewModelScope.launch {
             val response = accountService.getAccount(_token.value, _account.value.email)
@@ -117,6 +154,15 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         return _account
     }
 
+    /**
+     * Signup a new user
+     *
+     * @param tag
+     * @param email
+     * @param password
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun signup(
         tag: String,
         email: String,
@@ -147,6 +193,18 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Login, a successful login call (to the Tapp backend) will lead to the user's device FCM to be
+     * reported to the Tapp backend, allowing them to start receiving notifications. Logout will NOT
+     * clear the FCM, to ensure that even in a logged out state the device will continue to receive
+     * notifications post a first successful login call. See this view model's init procedure for
+     * more FCM handling, in addition to the notification package.
+     *
+     * @param email
+     * @param password
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun login(
         email: String,
         password: String,
@@ -184,6 +242,14 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Logout, even on a backend failure, the auth token is cleared. It's not seen as important to
+     * notify of failure if the credentials can be cleared locally. A logout call MUST be considered
+     * final and a new login procedure to be started to perform any additional actions related to the
+     * user account.
+     *
+     * @param onDone callback
+     */
     fun logout(onDone: () -> Unit) {
         Log.i("AccountViewModel", "logout")
 
@@ -204,6 +270,13 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Update tag of the user account
+     *
+     * @param tag
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun updateTag(tag: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "updating tag to $tag")
 
@@ -225,6 +298,13 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Update password
+     *
+     * @param password
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun updatePassword(password: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "updating password")
         viewModelScope.launch {
@@ -240,6 +320,12 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Delete account
+     *
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun deleteAccount(onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "deleting account ${_account.value.email}")
         viewModelScope.launch {
@@ -255,6 +341,10 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Report the device FCM. The FCM is 1:1 with the user account email.
+     *
+     */
     private fun reportFCM() {
         Log.i("AccountViewModel", "Fetching FCM token and notifying backend...")
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
