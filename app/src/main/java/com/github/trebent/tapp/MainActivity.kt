@@ -27,11 +27,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.screen.AccountScreenRoute
-import com.github.trebent.tapp.screen.EditTappGroupScreenRoute
 import com.github.trebent.tapp.screen.HomeScreenRoute
 import com.github.trebent.tapp.screen.LoginScreenRoute
 import com.github.trebent.tapp.screen.SignupScreenRoute
-import com.github.trebent.tapp.screen.TappGroupScreenRoute
+import com.github.trebent.tapp.screen.tappgroup.EditTappGroupScreenRoute
+import com.github.trebent.tapp.screen.tappgroup.TappGroupScreenRoute
 import com.github.trebent.tapp.ui.theme.TappTheme
 import com.github.trebent.tapp.viewmodel.AccountViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
