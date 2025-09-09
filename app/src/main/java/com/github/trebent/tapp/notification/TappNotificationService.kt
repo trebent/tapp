@@ -1,3 +1,7 @@
+/**
+ * The app's notification service.
+ */
+
 package com.github.trebent.tapp.notification
 
 import android.Manifest

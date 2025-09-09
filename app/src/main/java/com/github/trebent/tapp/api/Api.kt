@@ -1,3 +1,7 @@
+/**
+ * API glue, declaring the retrofit object and registering services.
+ */
+
 package com.github.trebent.tapp.api
 
 import com.github.trebent.tapp.BuildConfig

@@ -1,3 +1,7 @@
+/**
+ * Account related declarations and Retrofit services, mapping objects to the Tapp backend..
+ */
+
 package com.github.trebent.tapp.api
 
 import retrofit2.Response

@@ -1,3 +1,7 @@
+/**
+ * This file contains all group-view related logic that is needed to render the UI.
+ */
+
 package com.github.trebent.tapp.screen.tappgroup
 
 import android.util.Log

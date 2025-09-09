@@ -1,3 +1,7 @@
+/**
+ * This file contains all group-edit related logic that is needed to render the UI.
+ */
+
 package com.github.trebent.tapp.screen.tappgroup
 
 import android.util.Log
@@ -58,6 +62,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 
+/**
+ * The route target when navigating to edit a Tapp group.
+ */
 @Composable
 fun EditTappGroupScreenRoute(
     tappGroupViewModel: TappGroupViewModel,
@@ -75,6 +82,11 @@ fun EditTappGroupScreenRoute(
     )
 }
 
+/**
+ * Main entrypoint screen for when editing a tapp group. This renders controls for a group owner
+ * to edit the group. A non-owner won't be able to navigate here to edit, but will be able to
+ * navigate here when creating a NEW group.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTappGroupScreen(
@@ -297,6 +309,9 @@ fun EditTappGroupScreen(
     }
 }
 
+/**
+ * Dialog shown when the user has clicked to delete the group, confirmation will delete the group.
+ */
 @Composable
 fun ConfirmTappGroupDeleteDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
     Dialog(onDismissRequest = onCancel) {
@@ -304,6 +319,9 @@ fun ConfirmTappGroupDeleteDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
     }
 }
 
+/**
+ * Content for the group delete confirmation dialog, user solely for preview rendering.
+ */
 @Composable
 fun ConfirmTappGroupDeleteContent(onConfirm: () -> Unit, onCancel: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -338,6 +356,9 @@ fun ConfirmTappGroupDeleteContent(onConfirm: () -> Unit, onCancel: () -> Unit) {
     }
 }
 
+/**
+ * Emoji picker dialog, lets the group owner select the emoji for the group.
+ */
 @Composable
 fun EmojiPickerDialog(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
@@ -345,6 +366,9 @@ fun EmojiPickerDialog(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     }
 }
 
+/**
+ * Content for the emoji picker dialog, used solely for preview rendering.
+ */
 @Composable
 fun EmojiPickerContent(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     Card {
@@ -364,6 +388,9 @@ fun EmojiPickerContent(onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     }
 }
 
+/**
+ * An emoji button, making the emojis clickable.
+ */
 @Composable
 fun EmojiButton(emoji: String, onClick: () -> Unit) {
     Box(
@@ -380,6 +407,9 @@ fun EmojiButton(emoji: String, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Preview how it looks when a new group is created.
+ */
 @Preview
 @Composable
 fun NewGroupScreenPreview() {
@@ -392,6 +422,9 @@ fun NewGroupScreenPreview() {
     )
 }
 
+/**
+ * Preview for the editing screen, when a group already exists.
+ */
 @Preview
 @Composable
 fun EditGroupScreenPreview() {
@@ -404,6 +437,9 @@ fun EditGroupScreenPreview() {
     )
 }
 
+/**
+ * Emoji picker preview.
+ */
 @Preview(showBackground = true)
 @Composable
 fun EmojiPickerPreview() {

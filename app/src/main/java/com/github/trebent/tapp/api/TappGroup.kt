@@ -1,3 +1,7 @@
+/**
+ * Group related services and objects, mapping to objects in the Tapp backend.
+ */
+
 package com.github.trebent.tapp.api
 
 import com.google.gson.annotations.SerializedName
