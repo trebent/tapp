@@ -1,3 +1,6 @@
+/**
+ * This is a custom generated theme from: https://material-foundation.github.io/material-theme-builder/
+ */
 package com.github.trebent.tapp.ui.theme
 
 import android.os.Build
