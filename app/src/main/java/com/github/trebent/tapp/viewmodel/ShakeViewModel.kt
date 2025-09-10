@@ -18,9 +18,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
+/**
+ * Shake view model, providing composables a way of subscribing to shake events.
+ *
+ * @property application
+ * @constructor Create empty Shake view model
+ */
 class ShakeViewModel(private val application: Application) : AndroidViewModel(application) {
     private val _i = MutableStateFlow(false)
     val initialised = _i.asStateFlow()
+
+    // Subscribable to react to shake events.
     private val _shakeEvents = MutableSharedFlow<Unit>()
     val shakeEvents = _shakeEvents.asSharedFlow()
 
@@ -30,15 +38,26 @@ class ShakeViewModel(private val application: Application) : AndroidViewModel(ap
         viewModelScope.launch { _shakeEvents.emit(Unit) }
     })
 
+    /**
+     * Init logic here mostly to align with the other two view models, nothing to see here really.
+     */
     init {
         Log.i("ShakeViewModel", "initialising the view model...")
         _i.value = true
     }
 
+    /**
+     * Start listening with the underlying shake detector.
+     *
+     */
     fun startListening() {
         shakeDetector.start()
     }
 
+    /**
+     * Stop listening with the underlying shake detector.
+     *
+     */
     fun stopListening() {
         shakeDetector.stop()
     }
