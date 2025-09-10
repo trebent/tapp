@@ -36,6 +36,7 @@ import com.github.trebent.tapp.screen.tappgroup.EditTappGroupScreenRoute
 import com.github.trebent.tapp.screen.tappgroup.TappGroupScreenRoute
 import com.github.trebent.tapp.ui.theme.TappTheme
 import com.github.trebent.tapp.viewmodel.AccountViewModel
+import com.github.trebent.tapp.viewmodel.ShakeViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 
 
@@ -63,6 +64,7 @@ class MainActivity : ComponentActivity() {
     private val tappGroupViewModel: TappGroupViewModel by viewModels {
         SavedStateViewModelFactory(application, this)
     }
+    private val shakeViewModel: ShakeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,7 +72,7 @@ class MainActivity : ComponentActivity() {
         // Keep the splash as long as the auth view model needs to do its cloud sync.
         val splash = installSplashScreen()
         splash.setKeepOnScreenCondition {
-            !accountViewModel.initialised.value && !tappGroupViewModel.initialised.value
+            !accountViewModel.initialised.value && !tappGroupViewModel.initialised.value && !shakeViewModel.initialised.value
         }
 
         // Ensure the group view model always uses the most up to date token, rely on the account
@@ -89,7 +91,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.fillMaxSize()) {}
                 } else {
                     // Only show your main UI after both view models are ready
-                    Main(accountViewModel, tappGroupViewModel)
+                    Main(accountViewModel, tappGroupViewModel, shakeViewModel)
                 }
             }
         }
@@ -104,7 +106,11 @@ class MainActivity : ComponentActivity() {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewModel) {
+fun Main(
+    accountViewModel: AccountViewModel,
+    tappGroupViewModel: TappGroupViewModel,
+    shakeViewModel: ShakeViewModel
+) {
     Log.i("Main", "main compose entrypoint")
     val navController = rememberNavController()
 
@@ -170,6 +176,7 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
                 TappGroupScreenRoute(
                     accountViewModel,
                     tappGroupViewModel,
+                    shakeViewModel,
                     goToEditGroup,
                     goBack,
                 )

@@ -41,6 +41,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -67,6 +69,7 @@ import com.github.trebent.tapp.api.Account
 import com.github.trebent.tapp.api.Tapp
 import com.github.trebent.tapp.api.TappGroup
 import com.github.trebent.tapp.viewmodel.AccountViewModel
+import com.github.trebent.tapp.viewmodel.ShakeViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 import com.github.trebent.tapp.viewmodel.testAccount
 import com.github.trebent.tapp.viewmodel.testGroup
@@ -81,18 +84,41 @@ import kotlinx.coroutines.flow.asStateFlow
 fun TappGroupScreenRoute(
     accountViewModel: AccountViewModel,
     tappGroupViewModel: TappGroupViewModel,
+    shakeViewModel: ShakeViewModel,
     goToEditGroup: (tappGroup: TappGroup) -> Unit,
     goBack: () -> Unit
 ) {
     Log.i("TappGroupScreenRoute", "navigated")
     val asf = accountViewModel.account
+    val onTapp: () -> Unit = { tappGroupViewModel.tapp(asf.value) }
+
+    DisposableEffect(Unit) {
+        Log.i("TappGroupScreenRoute", "registering shake detector")
+        shakeViewModel.startListening()
+        onDispose {
+            Log.i("TappGroupScreenRoute", "deregistering shake detector")
+
+            shakeViewModel.stopListening()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        Log.i("TappGroupScreenRoute", "registering shake detector")
+
+        shakeViewModel.shakeEvents.collect {
+            onTapp()
+            // Small delay to prevent spamming
+            kotlinx.coroutines.delay(500)
+        }
+    }
+
     TappGroupScreen(
         0,
         accountViewModel.account,
         tappGroupViewModel.selectedGroup,
         { tappGroupViewModel.refreshSelectedGroup() },
         tappGroupViewModel.listTapps(),
-        { tappGroupViewModel.tapp(asf.value) },
+        onTapp,
         goToEditGroup,
         { e, g, s, f -> tappGroupViewModel.inviteToGroup(e, g, s, f) },
         { g, s, f -> tappGroupViewModel.leaveGroup(g, s, f) },
