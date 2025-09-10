@@ -1,3 +1,6 @@
+/**
+ * This file implements the shake detection.
+ */
 package com.github.trebent.tapp.viewmodel
 
 import android.app.Application
@@ -41,29 +44,54 @@ class ShakeViewModel(private val application: Application) : AndroidViewModel(ap
     }
 }
 
+/**
+ * Shake detector, extends SensorEventListener to detect accelerometer events.
+ *
+ * @property sensorManager
+ * @property onShake what happens when you shake the device
+ * @constructor Create empty Shake detector
+ */
 private class ShakeDetector(
     private val sensorManager: SensorManager,
     private val onShake: () -> Unit
 ) : SensorEventListener {
 
     private var lastUpdate: Long = 0
-    private var shakeCount = 0
-    private val SHAKE_THRESHOLD = 15f       // Higher threshold
-    private val SHAKE_COUNT_RESET_TIME = 500 // ms
-    private val REQUIRED_SHAKES = 2          // Number of spikes to consider a shake
 
+    // Current count to compare to the shake threshold.
+    private var shakeCount = 0
+    private val shakeThreshold = 15f
+    private val shakeResetTime = 500  // Maximum time between movements to consider it a shake.
+
+    // Number of spikes to consider a shake, important for a "back and forth" movement to actually
+    // trigger it, rather than just a sudden movement forward/backward.
+    private val requiredShakes = 2
+
+    // Time of last shake, to account for the reset time.
     private var lastShakeTime: Long = 0
 
+    /**
+     * Start the detector. Call Stop() to clean up resources associated with starting it.
+     *
+     */
     fun start() {
         val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
     }
 
+    /**
+     * Stop the detector.
+     *
+     */
     fun stop() {
         sensorManager.unregisterListener(this)
     }
 
-
+    /**
+     * On sensor changed is called per sensor movement detected.
+     *
+     * @param event
+     */
     override fun onSensorChanged(event: SensorEvent) {
         val curTime = System.currentTimeMillis()
         if ((curTime - lastUpdate) > 100) {
@@ -77,18 +105,19 @@ private class ShakeDetector(
             val gY = y / SensorManager.GRAVITY_EARTH
             val gZ = z / SensorManager.GRAVITY_EARTH
 
+            // NOTE: the gforce section was written with AI assistance.
             val gForce = sqrt(gX * gX + gY * gY + gZ * gZ)
 
-            if (gForce > SHAKE_THRESHOLD / 10f) { // normalize threshold
+            if (gForce > shakeThreshold / 10f) { // normalize threshold
                 val now = System.currentTimeMillis()
-                if (lastShakeTime + SHAKE_COUNT_RESET_TIME < now) {
+                if (lastShakeTime + shakeResetTime < now) {
                     shakeCount = 0 // reset if too much time passed
                 }
 
                 lastShakeTime = now
                 shakeCount++
 
-                if (shakeCount >= REQUIRED_SHAKES) {
+                if (shakeCount >= requiredShakes) {
                     shakeCount = 0
                     onShake()
                 }
