@@ -140,13 +140,20 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
      */
     fun fetchAccount(): StateFlow<Account> {
         viewModelScope.launch {
-            val response = accountService.getAccount(_token.value, _account.value.email)
-            if (response.isSuccessful) {
-                _account.value =
-                    Account(_account.value.email, "", response.body()?.tag)
-                Log.i("AccountViewModel", "fetched account successfully ${_account.value}")
-            } else {
-                Log.e("AccountViewModel", "failed to fetch account")
+            try {
+                val response = accountService.getAccount(_token.value, _account.value.email)
+                if (response.isSuccessful) {
+                    _account.value =
+                        Account(_account.value.email, "", response.body()?.tag)
+                    Log.i("AccountViewModel", "fetched account successfully ${_account.value}")
+                } else {
+                    Log.e("AccountViewModel", "failed to fetch account")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to fetch account: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
 
@@ -385,6 +392,7 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
                     "AccountViewModel",
                     "caught exception trying to delete account: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
+                onFailure()
             }
         }
     }

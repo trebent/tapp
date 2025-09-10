@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
@@ -54,7 +55,13 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		GroupID: group.ID,
 		User:    &model.Account{Email: email, Tag: account.Tag},
 	}
-	go firebase.Send(group, newTapp)
+	go firebase.SendMulticast(&firebase.TappNotification{
+		Title:   fmt.Sprintf("Group %s was tapped!", group.Name),
+		Body:    fmt.Sprintf("%s tapped group %s, tapp them back!", newTapp.User.UserIdentifier(), group.Name),
+		Time:    newTapp.Time,
+		Group:   group,
+		Account: newTapp.User,
+	})
 
 	db.SimpleAcquire(newTapp)
 	defer db.SimpleRelease(newTapp)

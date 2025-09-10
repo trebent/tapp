@@ -529,7 +529,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             } catch (e: Exception) {
                 Log.e(
                     "GroupViewModel",
-                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                    "caught exception trying to kick from group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
                 onFailure()
             }
@@ -565,7 +565,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             } catch (e: Exception) {
                 Log.e(
                     "GroupViewModel",
-                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                    "caught exception trying to create group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
                 onFailure()
             }
@@ -602,7 +602,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             } catch (e: Exception) {
                 Log.e(
                     "GroupViewModel",
-                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                    "caught exception trying to update group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
                 onFailure()
             }

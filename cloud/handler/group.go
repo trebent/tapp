@@ -2,13 +2,16 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/trebent/tapp-backend/db"
+	"github.com/trebent/tapp-backend/firebase"
 	"github.com/trebent/tapp-backend/model"
 	"github.com/trebent/zerologr"
 )
@@ -288,7 +291,7 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Read(&model.Account{Email: invitedEmail})
+	invitedAccount, err := db.Read(&model.Account{Email: invitedEmail})
 	if err != nil {
 		zerologr.Error(err, "no email found matching the invited email")
 		w.WriteHeader(http.StatusNotFound)
@@ -305,6 +308,14 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 			func(a *model.Account) bool { return a.Email == invitedEmail },
 		) {
 		existingGroup.Invites = append(existingGroup.Invites, &model.Account{Email: invitedEmail})
+
+		go firebase.SendIndividual(&firebase.TappNotification{
+			Title:   fmt.Sprintf("You have been invited to the group %s!", existingGroup.Name),
+			Body:    fmt.Sprintf("%s has invited you to join the group %s!", email, existingGroup.Name),
+			Time:    time.Now().UnixMilli(),
+			Group:   existingGroup,
+			Account: invitedAccount,
+		})
 
 		db.AquireTableLock[*model.Invitation]()
 		defer db.ReleaseTableLock[*model.Invitation]()
@@ -365,10 +376,26 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	invitedAccount, err := db.Read(&model.Account{Email: email})
+	if err != nil {
+		zerologr.Error(err, "no email found matching the email")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(jsonFormatErr)
+		return
+	}
+
 	existingGroup.Members = append(existingGroup.Members, &model.Account{Email: email})
 	existingGroup.Invites = slices.DeleteFunc(
 		existingGroup.Invites, func(a *model.Account) bool { return a.Email == email },
 	)
+
+	go firebase.SendMulticast(&firebase.TappNotification{
+		Title:   fmt.Sprintf("%s has joined the group %s!", invitedAccount.UserIdentifier(), existingGroup.Name),
+		Body:    fmt.Sprintf("%s has accepted the invitation to join the group %s!", invitedAccount.UserIdentifier(), existingGroup.Name),
+		Time:    time.Now().UnixMilli(),
+		Group:   existingGroup,
+		Account: invitedAccount,
+	})
 
 	db.AquireTableLock[*model.Invitation]()
 	defer db.ReleaseTableLock[*model.Invitation]()
@@ -480,6 +507,22 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	leavingAccount, err := db.Read(&model.Account{Email: email})
+	if err != nil {
+		zerologr.Error(err, "no email found matching the email")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(jsonFormatErr)
+		return
+	}
+
+	go firebase.SendMulticast(&firebase.TappNotification{
+		Title:   fmt.Sprintf("%s has left the group %s!", leavingAccount.UserIdentifier(), existingGroup.Name),
+		Body:    fmt.Sprintf("%s has decided to leave the group %s!", leavingAccount.UserIdentifier(), existingGroup.Name),
+		Time:    time.Now().UnixMilli(),
+		Group:   existingGroup,
+		Account: leavingAccount,
+	})
+
 	existingGroup.Members = slices.DeleteFunc(
 		existingGroup.Members, func(a *model.Account) bool { return a.Email == email },
 	)
@@ -541,6 +584,22 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+
+	kickedAccount, err := db.Read(&model.Account{Email: email})
+	if err != nil {
+		zerologr.Error(err, "no email found matching the email")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(jsonFormatErr)
+		return
+	}
+
+	go firebase.SendMulticast(&firebase.TappNotification{
+		Title:   fmt.Sprintf("%s has been kicked from the group %s!", kickedAccount.UserIdentifier(), existingGroup.Name),
+		Body:    fmt.Sprintf("%s has been kicked from the group %s!", kickedAccount.UserIdentifier(), existingGroup.Name),
+		Time:    time.Now().UnixMilli(),
+		Group:   existingGroup,
+		Account: &model.Account{Email: email},
+	})
 
 	existingGroup.Members = slices.DeleteFunc(
 		existingGroup.Members, func(a *model.Account) bool { return a.Email == kickedEmail },

@@ -60,6 +60,11 @@ class TappNotificationService : FirebaseMessagingService() {
             val senderTag: String
             val time: String
             val groupId: String
+
+            // non-null when receiving targetted notifications, meaning they should be displayed
+            // no matter the sender.
+            val individual: String?
+            
             remoteMessage.data.let { data ->
                 title = data["title"]!!
                 body = data["body"]!!
@@ -67,6 +72,7 @@ class TappNotificationService : FirebaseMessagingService() {
                 senderTag = data["sender_tag"]!!
                 time = data["time"]!!
                 groupId = data["group_id"]!!
+                individual = data["individual"]
             }
 
             val email = runBlocking {
@@ -74,7 +80,7 @@ class TappNotificationService : FirebaseMessagingService() {
             }
 
             // Determine noop, if I am the sender, I don't need a notification.
-            if (email == sender) {
+            if (individual == null && email == sender) {
                 Log.d("TappNotificationService", "Sender is me, discarding")
                 return
             }

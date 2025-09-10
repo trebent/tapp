@@ -75,30 +75,90 @@ func Remove(email string) {
 	zerologr.Info("wrote to FCM blob", "blob", fcmBlob)
 }
 
-func Send(group *model.Group, tapp *model.Tapp) {
+/*
+Expected notification DATA:
+
+	title = data["title"]!!
+	body = data["body"]!!
+	sender = data["sender"]!!
+	senderTag = data["sender_tag"]!!
+	time = data["time"]!!
+	groupId = data["group_id"]!!
+
+NO NOTIFICATION DATA TO PREVENT SYSTEM TRAY HANDLING.
+*/
+
+type TappNotification struct {
+	Title   string
+	Body    string
+	Time    int64
+	Group   *model.Group
+	Account *model.Account
+}
+
+// SendIndividual, for send invividual, the account is the receiver, and sender.
+func SendIndividual(n *TappNotification) {
 	zerologr.Info(
 		fmt.Sprintf(
-			"%s is notifying group %s with id %d", tapp.User.Email, group.Name, group.ID,
+			"notifying individual %s with id %d", n.Account.Email, n.Group.ID,
+		),
+	)
+
+	_, err := c.Send(context.Background(), &messaging.Message{
+		Token: getFCM(n.Account),
+		Data: map[string]string{
+			"title":      n.Title,
+			"body":       n.Body,
+			"sender":     n.Account.Email,
+			"sender_tag": n.Account.Tag,
+			// This is used to display targetted notifications on the client side.
+			"individual": "true",
+			"time":       strconv.Itoa(int(n.Time)),
+			"group_id":   strconv.Itoa(n.Group.ID),
+		},
+	})
+	if err != nil {
+		zerologr.Error(err, "failed to send message")
+		return
+	}
+}
+
+// SendMulticast, for send multicast, the account is the sender.
+func SendMulticast(n *TappNotification) {
+	zerologr.Info(
+		fmt.Sprintf(
+			"%s is notifying group %s with id %d", n.Account.Email, n.Group.Name, n.Group.ID,
 		),
 	)
 
 	_, err := c.SendEachForMulticast(context.Background(), &messaging.MulticastMessage{
-		Tokens: getFCMS(group),
+		Tokens: getFCMS(n.Group),
 		Data: map[string]string{
-			"time":       strconv.Itoa(int(tapp.Time)),
-			"sender_tag": tapp.User.Tag,
-			"sender":     tapp.User.Email,
-			"group_id":   strconv.Itoa(group.ID),
-		},
-		Notification: &messaging.Notification{
-			Title: fmt.Sprintf("Group %s was tapped!", group.Name),
-			Body:  "Open the Tapp app to check it out!",
+			"title":      n.Title,
+			"body":       n.Body,
+			"sender":     n.Account.Email,
+			"sender_tag": n.Account.Tag,
+			"time":       strconv.Itoa(int(n.Time)),
+			"group_id":   strconv.Itoa(n.Group.ID),
 		},
 	})
 	if err != nil {
 		zerologr.Error(err, "failed to send multicast message")
 		return
 	}
+}
+
+func getFCM(account *model.Account) string {
+	fcmLock.Lock()
+	defer fcmLock.Unlock()
+
+	for email, fcm := range fcmBlob {
+		if email == account.Email {
+			return fcm
+		}
+	}
+
+	return ""
 }
 
 func getFCMS(group *model.Group) []string {

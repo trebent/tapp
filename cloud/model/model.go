@@ -50,6 +50,13 @@ func (t *Tapp) TableKey() string {
 	return strconv.Itoa(t.GroupID)
 }
 
+func (a *Account) UserIdentifier() string {
+	if a.Tag != "" {
+		return a.Tag
+	}
+	return a.Email
+}
+
 func Deserialize[T any](reader io.Reader, target T) (T, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
