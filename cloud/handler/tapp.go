@@ -61,6 +61,7 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		Time:    newTapp.Time,
 		Group:   group,
 		Account: newTapp.User,
+		Type:    "tapp",
 	})
 
 	db.SimpleAcquire(newTapp)

@@ -64,7 +64,8 @@ class TappNotificationService : FirebaseMessagingService() {
             // non-null when receiving targetted notifications, meaning they should be displayed
             // no matter the sender.
             val individual: String?
-            
+            val type: String
+
             remoteMessage.data.let { data ->
                 title = data["title"]!!
                 body = data["body"]!!
@@ -73,6 +74,7 @@ class TappNotificationService : FirebaseMessagingService() {
                 time = data["time"]!!
                 groupId = data["group_id"]!!
                 individual = data["individual"]
+                type = data["type"]!!
             }
 
             val email = runBlocking {
@@ -85,17 +87,19 @@ class TappNotificationService : FirebaseMessagingService() {
                 return
             }
 
-            CoroutineScope(Dispatchers.Default).launch {
-                TappNotificationEvents.events.emit(
-                    Tapp(
-                        groupId.toInt(),
-                        time.toLong(),
-                        // A Tapp has a companion object that will determine if the email or tag
-                        // is to be used for the tapp listing. The tag will be preferred if it
-                        // exists.
-                        Account(sender, "", senderTag)
+            if (type == "tapp") {
+                CoroutineScope(Dispatchers.Default).launch {
+                    TappNotificationEvents.events.emit(
+                        Tapp(
+                            groupId.toInt(),
+                            time.toLong(),
+                            // A Tapp has a companion object that will determine if the email or tag
+                            // is to be used for the tapp listing. The tag will be preferred if it
+                            // exists.
+                            Account(sender, "", senderTag)
+                        )
                     )
-                )
+                }
             }
 
             showNotification(title, body)

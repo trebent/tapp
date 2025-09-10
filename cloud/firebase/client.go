@@ -84,6 +84,8 @@ Expected notification DATA:
 	senderTag = data["sender_tag"]!!
 	time = data["time"]!!
 	groupId = data["group_id"]!!
+	individual = data["individual"]
+	type = data["type"]!!
 
 NO NOTIFICATION DATA TO PREVENT SYSTEM TRAY HANDLING.
 */
@@ -94,6 +96,7 @@ type TappNotification struct {
 	Time    int64
 	Group   *model.Group
 	Account *model.Account
+	Type    string
 }
 
 // SendIndividual, for send invividual, the account is the receiver, and sender.
@@ -111,6 +114,7 @@ func SendIndividual(n *TappNotification) {
 			"body":       n.Body,
 			"sender":     n.Account.Email,
 			"sender_tag": n.Account.Tag,
+			"type":       n.Type,
 			// This is used to display targetted notifications on the client side.
 			"individual": "true",
 			"time":       strconv.Itoa(int(n.Time)),
