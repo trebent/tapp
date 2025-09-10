@@ -4,7 +4,9 @@
 
 package com.github.trebent.tapp.api
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -24,6 +26,7 @@ import java.util.Locale
  * person that is allowed to change the group properties and invite new members. Members may only
  * "Tapp" the group, which means to notify them.
  */
+@Parcelize
 data class TappGroup(
     val id: Int,
     val name: String,
@@ -32,7 +35,7 @@ data class TappGroup(
     val description: String?,
     val members: List<Account>?,
     val invites: List<Account>?,
-) {
+) : Parcelable {
     fun memberCount(): Int = members?.size ?: 0
 }
 

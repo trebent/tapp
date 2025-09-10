@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +23,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -57,10 +57,16 @@ val emailkey = stringPreferencesKey("email")
  */
 class MainActivity : ComponentActivity() {
     // The Tapp view models.
-    private val accountViewModel: AccountViewModel by viewModels()
-    private val tappGroupViewModel: TappGroupViewModel by viewModels()
+    private val accountViewModel: AccountViewModel by viewModels {
+        SavedStateViewModelFactory(application, this)
+    }
+    private val tappGroupViewModel: TappGroupViewModel by viewModels {
+        SavedStateViewModelFactory(application, this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         // Keep the splash as long as the auth view model needs to do its cloud sync.
         val splash = installSplashScreen()
         splash.setKeepOnScreenCondition {
@@ -70,8 +76,6 @@ class MainActivity : ComponentActivity() {
         // Ensure the group view model always uses the most up to date token, rely on the account
         // view model for this. Preference handling is a bit tricky, this felt cleaner.
         tappGroupViewModel.setTokenGetter({ accountViewModel.getToken() })
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         setContent {
             TappTheme {

@@ -4,6 +4,8 @@
 
 package com.github.trebent.tapp.api
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -19,7 +21,8 @@ import retrofit2.http.Path
  * security purposes, the password field will never be populated, EXCEPT for when the account is
  * created. It is only here to help align object usage across Tapp.
  */
-data class Account(val email: String, val password: String, val tag: String?) {
+@Parcelize
+data class Account(val email: String, val password: String?, val tag: String?) : Parcelable {
     /**
      * User identifier utility, will utilise the tag if present, otherwise the email.
      *

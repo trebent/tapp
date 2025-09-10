@@ -154,7 +154,7 @@ class TappNotificationService : FirebaseMessagingService() {
         if (!Tapplication.isInForeground) {
             val intent = Intent(this, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT,
+                this, 0, intent, PendingIntent.FLAG_IMMUTABLE,
             )
             builder.setContentIntent(pendingIntent)
         }

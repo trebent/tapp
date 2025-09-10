@@ -7,6 +7,7 @@ package com.github.trebent.tapp.viewmodel
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.trebent.tapp.api.Account
 import com.github.trebent.tapp.api.Tapp
@@ -102,11 +103,14 @@ val testInvites = listOf(testInvite)
  * @property application
  * @constructor Create empty Tapp group view model
  */
-class TappGroupViewModel(private val application: Application) : AndroidViewModel(application) {
+class TappGroupViewModel(
+    private val application: Application,
+    private val savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
 
     // The currently selected group, set on navigation to always keep a reference to what is being
     // worked on.
-    private val _selectedGroup = MutableStateFlow(newTappGroup)
+    private val _selectedGroup = MutableStateFlow(savedStateHandle["selectedGroup"] ?: newTappGroup)
     val selectedGroup = _selectedGroup.asStateFlow()
 
     // The user's groups.
@@ -146,6 +150,11 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
                 if (tapp.groupId == _selectedGroup.value.id) {
                     _tapps.value = listOf(tapp) + _tapps.value
                 }
+            }
+        }
+        viewModelScope.launch {
+            _selectedGroup.collect { group ->
+                savedStateHandle["selectedGroup"] = group
             }
         }
     }

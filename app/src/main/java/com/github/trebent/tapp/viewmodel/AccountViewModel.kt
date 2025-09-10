@@ -10,6 +10,7 @@ import android.app.Application
 import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.trebent.tapp.api.Account
 import com.github.trebent.tapp.api.ChangePasswordRequest
@@ -40,7 +41,10 @@ val testAccountWithEmptyTag = Account("else@domain.se", "pw", "")
  * @property application
  * @constructor Create empty Account view model
  */
-class AccountViewModel(private val application: Application) : AndroidViewModel(application) {
+class AccountViewModel(
+    private val application: Application,
+    private val savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
     // Used for relaying to the MainActivity if the splash screen can be removed or not.
     private val _i = MutableStateFlow(false)
     val initialised = _i.asStateFlow()
