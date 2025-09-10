@@ -206,7 +206,7 @@ fun EditTappGroupScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
-            if (nameError) {
+            if (descriptionError) {
                 item(span = { GridItemSpan(4) }) {
                     Text(
                         text = "description is too long, it must be maximum 250 characters",
