@@ -310,8 +310,12 @@ func handleGroupInvite(w http.ResponseWriter, r *http.Request) {
 		existingGroup.Invites = append(existingGroup.Invites, &model.Account{Email: invitedEmail})
 
 		go firebase.SendIndividual(&firebase.TappNotification{
-			Title:   fmt.Sprintf("You have been invited to the group %s!", existingGroup.Name),
-			Body:    fmt.Sprintf("%s has invited you to join the group %s!", email, existingGroup.Name),
+			Title: fmt.Sprintf(
+				"You have been invited to the group %s!", existingGroup.Name,
+			),
+			Body: fmt.Sprintf(
+				"%s has invited you to join the group %s!", email, existingGroup.Name,
+			),
 			Time:    time.Now().UnixMilli(),
 			Group:   existingGroup,
 			Account: invitedAccount,

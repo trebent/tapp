@@ -99,7 +99,7 @@ type TappNotification struct {
 	Type    string
 }
 
-// SendIndividual, for send invividual, the account is the receiver, and sender.
+// SendIndividual for send invividual, the account is the receiver, and sender.
 func SendIndividual(n *TappNotification) {
 	zerologr.Info(
 		fmt.Sprintf(
@@ -127,7 +127,7 @@ func SendIndividual(n *TappNotification) {
 	}
 }
 
-// SendMulticast, for send multicast, the account is the sender.
+// SendMulticast for send multicast, the account is the sender.
 func SendMulticast(n *TappNotification) {
 	zerologr.Info(
 		fmt.Sprintf(

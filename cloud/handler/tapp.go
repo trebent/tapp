@@ -56,8 +56,10 @@ func handleTapp(w http.ResponseWriter, r *http.Request) {
 		User:    &model.Account{Email: email, Tag: account.Tag},
 	}
 	go firebase.SendMulticast(&firebase.TappNotification{
-		Title:   fmt.Sprintf("Group %s was tapped!", group.Name),
-		Body:    fmt.Sprintf("%s tapped group %s, tapp them back!", newTapp.User.UserIdentifier(), group.Name),
+		Title: fmt.Sprintf("Group %s was tapped!", group.Name),
+		Body: fmt.Sprintf(
+			"%s tapped group %s, tapp them back!", newTapp.User.UserIdentifier(), group.Name,
+		),
 		Time:    newTapp.Time,
 		Group:   group,
 		Account: newTapp.User,
