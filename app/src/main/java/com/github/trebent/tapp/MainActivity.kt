@@ -1,3 +1,6 @@
+/**
+ * The main and only activity.
+ */
 package com.github.trebent.tapp
 
 import android.content.Context
@@ -16,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -37,13 +39,24 @@ import com.github.trebent.tapp.viewmodel.AccountViewModel
 import com.github.trebent.tapp.viewmodel.TappGroupViewModel
 
 
+// Set the data store in the global context to make it accessible.
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
+// Two data store keys, one for the backend token, and one for the user email.
 val tokenkey = stringPreferencesKey("auth_token")
+
+// The email preference is used to link the device's FCM with the user account (if the user is signed in).
+// It's also used to fetch account information on start.
 val emailkey = stringPreferencesKey("email")
 
 
+/**
+ * Main activity
+ *
+ * @constructor Create empty Main activity
+ */
 class MainActivity : ComponentActivity() {
-
+    // The Tapp view models.
     private val accountViewModel: AccountViewModel by viewModels()
     private val tappGroupViewModel: TappGroupViewModel by viewModels()
 
@@ -54,12 +67,16 @@ class MainActivity : ComponentActivity() {
             !accountViewModel.initialised.value && !tappGroupViewModel.initialised.value
         }
 
+        // Ensure the group view model always uses the most up to date token, rely on the account
+        // view model for this. Preference handling is a bit tricky, this felt cleaner.
         tappGroupViewModel.setTokenGetter({ accountViewModel.getToken() })
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
             TappTheme {
+                // Because the on screen condition for the splash runs in the background, prevent
+                // rendering the login page (for a logged in user) and display an empty box instead.
                 val authReady by accountViewModel.initialised.collectAsState()
                 val groupsReady by tappGroupViewModel.initialised.collectAsState()
 
@@ -75,12 +92,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Main composable, providing the main navigation entrypoint.
+ *
+ * @param accountViewModel
+ * @param tappGroupViewModel
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewModel) {
     Log.i("Main", "main compose entrypoint")
     val navController = rememberNavController()
 
+    // navigation actions, to keep track of navController calls and keep a central way of controlling
+    // the way the user is allowed to navigate. Popping the nav stack is done here too, to not allow
+    // confusing backtracking to signup, login, home and such.
     val goBack: () -> Unit = { navController.popBackStack() }
     val goBackHome: () -> Unit =
         { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
@@ -96,6 +122,7 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
         navController.navigate("editGroup")
     }
 
+    // Used to set the start destination.
     val isLoggedIn = accountViewModel.isLoggedIn.collectAsState()
     val startDest = if (isLoggedIn.value) "home" else "login"
 
@@ -110,7 +137,6 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
             modifier = Modifier
                 .padding(padding)
         ) {
-            composable("splash") { SplashScreen() }
             composable("account") {
                 AccountScreenRoute(accountViewModel, goToLogin, goBack)
             }
@@ -157,15 +183,4 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
             }
         }
     }
-}
-
-@Composable
-fun SplashScreen() {
-    Box(modifier = Modifier.fillMaxSize()) {}
-}
-
-@Preview
-@Composable
-fun SplashScreenPreview() {
-    SplashScreen()
 }

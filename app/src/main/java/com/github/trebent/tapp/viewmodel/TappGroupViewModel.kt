@@ -1,3 +1,7 @@
+/**
+ * This file contain implementation for the Tapp groups. Creation, updates, deletions, user memberships
+ * etc. are all handled here. And, of course, the tapping itself.
+ */
 package com.github.trebent.tapp.viewmodel
 
 import android.app.Application
@@ -17,7 +21,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
+/**
+ * New tapp group, this object is used when creating new tapp groups as a baseline for value defaults.
+ */
 val newTappGroup = TappGroup(0, "", "", "", "", emptyList(), emptyList())
+
+/*
+Test declarations, for preview composables.
+*/
 val testGroup =
     TappGroup(
         12,
@@ -80,21 +91,33 @@ val testGroups = listOf(
     TappGroup(9, "group9", "", "", "some words", emptyList(), emptyList()),
     TappGroup(10, "group10", "", "", "some words", emptyList(), emptyList()),
 )
-
 val testInvite = TappGroupInvitation(1, "name", "emial@test.se")
 val testInvites = listOf(testInvite)
 
+/**
+ * Tapp group view model. Most backend communication will accept a success and failure callback,
+ * enabling just-in-time-reactions in the UI. Listing content is handled slightly differently as
+ * they rather return state flows for UI components to subscribe to.
+ *
+ * @property application
+ * @constructor Create empty Tapp group view model
+ */
 class TappGroupViewModel(private val application: Application) : AndroidViewModel(application) {
 
+    // The currently selected group, set on navigation to always keep a reference to what is being
+    // worked on.
     private val _selectedGroup = MutableStateFlow(newTappGroup)
     val selectedGroup = _selectedGroup.asStateFlow()
 
+    // The user's groups.
     private val _groups = MutableStateFlow<List<TappGroup>>(emptyList())
     val groups = _groups.asStateFlow()
 
+    // Any pending group invitations.
     private val _invitations = MutableStateFlow<List<TappGroupInvitation>>(emptyList())
     val invitations = _invitations.asStateFlow()
 
+    // The current group's tapps.
     private val _tapps = MutableStateFlow<List<Tapp>>(emptyList())
     val tapps = _tapps.asStateFlow()
 
@@ -102,8 +125,16 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     private val _i = MutableStateFlow(false)
     val initialised = _i.asStateFlow()
 
+    // A callback that can be used to fetch the current token. Uniform way of fetching
+    // the outgoing HTTP Authorization header required for ALL authorized calls.
     private var _tokenGetter: () -> String = { "" }
 
+    /**
+     * The Tapp group view model will subscribe to tapp notifications to be able to refresh the tapp
+     * list without fetching it fully from the backend. More efficient this way. It will only prepend
+     * to the current tapps if the incoming tapp matches the selected tapp group (meaning it's applicable
+     * to the current navigation).
+     */
     init {
         Log.i("GroupViewModel", "initialising the group view model")
 
@@ -112,15 +143,27 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
             TappNotificationEvents.events.collect { tapp ->
                 Log.i("GroupViewModel", "running tapp notification event collector")
 
-                _tapps.value = listOf(tapp) + _tapps.value
+                if (tapp.groupId == _selectedGroup.value.id) {
+                    _tapps.value = listOf(tapp) + _tapps.value
+                }
             }
         }
     }
 
+    /**
+     * Set token getter, called from the main activity.
+     *
+     * @param getter
+     */
     fun setTokenGetter(getter: () -> String) {
         _tokenGetter = getter
     }
 
+    /**
+     * Tapp a group, send a nofification to all members! This is where the fun begins :-).
+     *
+     * @param a account that does the tapping, to attach the correct identity to the tapp
+     */
     fun tapp(a: Account) {
         Log.i("GroupViewModel", "tapped group! ${selectedGroup.value.id}")
         val t = Tapp(selectedGroup.value.id, System.currentTimeMillis(), a)
@@ -140,6 +183,12 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * List tapps from the cloud. Returns the stateflow immediately which will be populated with
+     * tapps when the backend responds.
+     *
+     * @return the tapp state flow
+     */
     fun listTapps(): StateFlow<List<Tapp>> {
         Log.i("GroupViewModel", "listing tapps for group ${selectedGroup.value.id}")
         viewModelScope.launch {
@@ -155,6 +204,12 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         return tapps
     }
 
+    /**
+     * List tapp groups. Returns the stateflow immediately which will be populated with
+     * tapps when the backend responds.
+     *
+     * @return the group state flow
+     */
     fun list(): StateFlow<List<TappGroup>> {
         Log.i("GroupViewModel", "listing groups")
         viewModelScope.launch {
@@ -169,6 +224,12 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         return groups
     }
 
+    /**
+     * Refresh the currently selected group. Returns the stateflow immediately which will be populated with
+     * tapps when the backend responds.
+     *
+     * @return the selected group state flow
+     */
     fun refreshSelectedGroup(): StateFlow<TappGroup> {
         Log.i("GroupViewModel", "refreshing the selected group")
         viewModelScope.launch {
@@ -183,10 +244,23 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         return _selectedGroup
     }
 
+    /**
+     * Select group. Selecting a group centers it for handling across the application. This is
+     * typically done prior to navigation to group detail screens.
+     *
+     * @param group to select
+     */
     fun selectGroup(group: TappGroup) {
         _selectedGroup.value = group
     }
 
+    /**
+     * Delete the input group.
+     *
+     * @param tappGroup to delete
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun delete(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "deleting group ${tappGroup.id}: ${tappGroup.name}")
         viewModelScope.launch {
@@ -207,6 +281,13 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Save the input group. The group is updated if its ID != 0, otherwise created.
+     *
+     * @param tappGroup to save
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun save(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "saving group ${tappGroup.id}: ${tappGroup.name}")
         if (tappGroup.id == 0) {
@@ -216,6 +297,14 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Invite the input email to the group.
+     *
+     * @param email
+     * @param group
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun inviteToGroup(
         email: String,
         group: TappGroup,
@@ -235,6 +324,12 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * List invitations. Returns the stateflow immediately which will be populated with
+     * tapps when the backend responds.
+     *
+     * @return
+     */
     fun listInvitations(): StateFlow<List<TappGroupInvitation>> {
         Log.i("GroupViewModel", "listing group invitations")
         viewModelScope.launch {
@@ -249,6 +344,13 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         return invitations
     }
 
+    /**
+     * Accept invitation to a group.
+     *
+     * @param invite
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun acceptInvitation(
         invite: TappGroupInvitation,
         onSuccess: () -> Unit,
@@ -261,7 +363,7 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
                 onSuccess()
                 removeInvitation(invite.groupId)
 
-                // Trigger group-listing
+                // Trigger group-listing, implies a UI component is monitoring the group state flow.
                 list()
             } else {
                 Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
@@ -270,6 +372,13 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Decline invitation
+     *
+     * @param invite
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun declineInvitation(
         invite: TappGroupInvitation,
         onSuccess: () -> Unit,
@@ -288,6 +397,13 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Leave group
+     *
+     * @param group
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun leaveGroup(
         group: TappGroup,
         onSuccess: () -> Unit,
@@ -306,6 +422,14 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Kick from group
+     *
+     * @param group
+     * @param email
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     fun kickFromGroup(
         group: TappGroup,
         email: String,
@@ -333,6 +457,13 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Create a group
+     *
+     * @param new
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     private fun create(new: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "creating group ${new.name}")
         viewModelScope.launch {
@@ -354,6 +485,13 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Update a group.
+     *
+     * @param updatedTappGroup
+     * @param onSuccess callback
+     * @param onFailure callback
+     */
     private fun update(updatedTappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "updating group ${updatedTappGroup.id}: ${updatedTappGroup.name}")
         viewModelScope.launch {
@@ -376,21 +514,41 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
         }
     }
 
+    /**
+     * Update the groups state flow with a new value.
+     *
+     * @param remoteGroups to replace current list
+     */
     private fun updateGroups(remoteGroups: List<TappGroup>) {
         Log.i("GroupViewModel", "setting ${remoteGroups.size} groups")
         _groups.value = remoteGroups
     }
 
+    /**
+     * Remove group from the internal state flow
+     *
+     * @param group to remove
+     */
     private fun removeGroup(group: TappGroup) {
         Log.i("GroupViewModel", "removing local group ${group.id}")
         _groups.value = _groups.value.filter { g -> g.id != group.id }
     }
 
+    /**
+     * Update the invitations state flow with a fetched list
+     *
+     * @param remoteInvitations
+     */
     private fun updateInvitations(remoteInvitations: List<TappGroupInvitation>) {
         Log.i("GroupViewModel", "setting ${remoteInvitations.size} invitations")
         _invitations.value = remoteInvitations
     }
 
+    /**
+     * Remove invitation from the local state flow
+     *
+     * @param groupID of the invitation to remove
+     */
     private fun removeInvitation(groupID: Int) {
         Log.i("GroupViewModel", "removing local invitation $groupID")
         _invitations.value = _invitations.value.filter { i -> i.groupId != groupID }

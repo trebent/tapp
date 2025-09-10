@@ -79,19 +79,17 @@ class TappNotificationService : FirebaseMessagingService() {
                 return
             }
 
-            if (Tapplication.isInForeground) {
-                CoroutineScope(Dispatchers.Default).launch {
-                    TappNotificationEvents.events.emit(
-                        Tapp(
-                            groupId.toInt(),
-                            time.toLong(),
-                            // A Tapp has a companion object that will determine if the email or tag
-                            // is to be used for the tapp listing. The tag will be preferred if it
-                            // exists.
-                            Account(sender, "", senderTag)
-                        )
+            CoroutineScope(Dispatchers.Default).launch {
+                TappNotificationEvents.events.emit(
+                    Tapp(
+                        groupId.toInt(),
+                        time.toLong(),
+                        // A Tapp has a companion object that will determine if the email or tag
+                        // is to be used for the tapp listing. The tag will be preferred if it
+                        // exists.
+                        Account(sender, "", senderTag)
                     )
-                }
+                )
             }
 
             showNotification(title, body)
@@ -131,8 +129,7 @@ class TappNotificationService : FirebaseMessagingService() {
     }
 
     /**
-     * Show a notification on screen. This is called from the message receiver. A notification will
-     * only be shown if Tapp is NOT in the foreground.
+     * Show a notification on screen. This is called from the message receiver.
      */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(title: String, message: String) {
