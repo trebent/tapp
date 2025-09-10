@@ -128,6 +128,13 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
 
     Log.i("Main", "start destination set to '${startDest}'")
 
+    /*
+    An important note here is that the navigation map MUST ONLY CONTAIN "ROUTE" composables. Route
+    composables are allowed to accept view model references, screen composables are not. This is to
+    allow an easier time of rendering previews in each sub-screen section. View models are tricky
+    to pass references to for previewable components. Route-composables are basically one level
+    above the screen they're targetting, creating simpler lambdas wrapping viewmodel calls.
+    */
     Scaffold(
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
@@ -178,8 +185,9 @@ fun Main(accountViewModel: AccountViewModel, tappGroupViewModel: TappGroupViewMo
             composable("signup") {
                 SignupScreenRoute(
                     accountViewModel,
+                    { navController.navigate("login") },
                     { navController.navigate("login") }
-                ) { navController.navigate("login") }
+                )
             }
         }
     }

@@ -192,12 +192,22 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun listTapps(): StateFlow<List<Tapp>> {
         Log.i("GroupViewModel", "listing tapps for group ${selectedGroup.value.id}")
         viewModelScope.launch {
-            val response = groupService.listTapps(_tokenGetter(), selectedGroup.value.id)
-            if (response.isSuccessful) {
-                _tapps.value = sortedTapps(response.body()!!)
-                Log.i("GroupViewModel", "listed ${_tapps.value.size} tapps!")
-            } else {
-                Log.e("GroupViewModel", "failed to list tapps for group ${selectedGroup.value.id}")
+            try {
+                val response = groupService.listTapps(_tokenGetter(), selectedGroup.value.id)
+                if (response.isSuccessful) {
+                    _tapps.value = sortedTapps(response.body()!!)
+                    Log.i("GroupViewModel", "listed ${_tapps.value.size} tapps!")
+                } else {
+                    Log.e(
+                        "GroupViewModel",
+                        "failed to list tapps for group ${selectedGroup.value.id}"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to list tapps: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
 
@@ -213,11 +223,18 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun list(): StateFlow<List<TappGroup>> {
         Log.i("GroupViewModel", "listing groups")
         viewModelScope.launch {
-            val response = groupService.listGroups(_tokenGetter())
-            if (response.isSuccessful) {
-                updateGroups(response.body()!!)
-            } else {
-                Log.e("GroupViewModel", "failed to fetch groups!")
+            try {
+                val response = groupService.listGroups(_tokenGetter())
+                if (response.isSuccessful) {
+                    updateGroups(response.body()!!)
+                } else {
+                    Log.e("GroupViewModel", "failed to fetch groups!")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to list groups: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
 
@@ -233,11 +250,18 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun refreshSelectedGroup(): StateFlow<TappGroup> {
         Log.i("GroupViewModel", "refreshing the selected group")
         viewModelScope.launch {
-            val response = groupService.getGroup(_tokenGetter(), _selectedGroup.value.id)
-            if (response.isSuccessful) {
-                _selectedGroup.value = response.body()!!
-            } else {
-                Log.e("GroupViewModel", "failed to refresh selected group")
+            try {
+                val response = groupService.getGroup(_tokenGetter(), _selectedGroup.value.id)
+                if (response.isSuccessful) {
+                    _selectedGroup.value = response.body()!!
+                } else {
+                    Log.e("GroupViewModel", "failed to refresh selected group")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to refresh the selected group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
 
@@ -264,17 +288,25 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun delete(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "deleting group ${tappGroup.id}: ${tappGroup.name}")
         viewModelScope.launch {
-            val response = groupService.deleteGroup(_tokenGetter(), tappGroup.id)
-            if (response.isSuccessful) {
-                Log.i(
-                    "GroupViewModel",
-                    "successfully deleted group ${tappGroup.id}: ${tappGroup.name}"
-                )
-                onSuccess()
-            } else {
+            try {
+                val response = groupService.deleteGroup(_tokenGetter(), tappGroup.id)
+                if (response.isSuccessful) {
+                    Log.i(
+                        "GroupViewModel",
+                        "successfully deleted group ${tappGroup.id}: ${tappGroup.name}"
+                    )
+                    onSuccess()
+                } else {
+                    Log.e(
+                        "GroupViewModel",
+                        "failed to delete group ${tappGroup.id}: ${tappGroup.name}"
+                    )
+                    onFailure()
+                }
+            } catch (e: Exception) {
                 Log.e(
                     "GroupViewModel",
-                    "failed to delete group ${tappGroup.id}: ${tappGroup.name}"
+                    "caught exception trying to delete a group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
                 onFailure()
             }
@@ -313,12 +345,20 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "inviting user $email to group $group.id")
         viewModelScope.launch {
-            val response = groupService.inviteToGroup(_tokenGetter(), group.id, email)
-            if (response.isSuccessful) {
-                list()
-                onSuccess()
-            } else {
-                Log.e("GroupViewModel", "failed to invite $email to group $group.id!")
+            try {
+                val response = groupService.inviteToGroup(_tokenGetter(), group.id, email)
+                if (response.isSuccessful) {
+                    list()
+                    onSuccess()
+                } else {
+                    Log.e("GroupViewModel", "failed to invite $email to group $group.id!")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to invite to group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -333,11 +373,18 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     fun listInvitations(): StateFlow<List<TappGroupInvitation>> {
         Log.i("GroupViewModel", "listing group invitations")
         viewModelScope.launch {
-            val response = groupService.listInvitations(_tokenGetter())
-            if (response.isSuccessful) {
-                updateInvitations(response.body()!!)
-            } else {
-                Log.e("GroupViewModel", "failed to list invitations!")
+            try {
+                val response = groupService.listInvitations(_tokenGetter())
+                if (response.isSuccessful) {
+                    updateInvitations(response.body()!!)
+                } else {
+                    Log.e("GroupViewModel", "failed to list invitations!")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to list invitations: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
 
@@ -358,15 +405,23 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "accepting group invitation ${invite.groupId}")
         viewModelScope.launch {
-            val response = groupService.joinGroup(_tokenGetter(), invite.groupId)
-            if (response.isSuccessful) {
-                onSuccess()
-                removeInvitation(invite.groupId)
+            try {
+                val response = groupService.joinGroup(_tokenGetter(), invite.groupId)
+                if (response.isSuccessful) {
+                    onSuccess()
+                    removeInvitation(invite.groupId)
 
-                // Trigger group-listing, implies a UI component is monitoring the group state flow.
-                list()
-            } else {
-                Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
+                    // Trigger group-listing, implies a UI component is monitoring the group state flow.
+                    list()
+                } else {
+                    Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to accept invitation: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -386,12 +441,20 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "declining group invitation ${invite.groupId}")
         viewModelScope.launch {
-            val response = groupService.declineGroup(_tokenGetter(), invite.groupId)
-            if (response.isSuccessful) {
-                onSuccess()
-                removeInvitation(invite.groupId)
-            } else {
-                Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
+            try {
+                val response = groupService.declineGroup(_tokenGetter(), invite.groupId)
+                if (response.isSuccessful) {
+                    onSuccess()
+                    removeInvitation(invite.groupId)
+                } else {
+                    Log.e("GroupViewModel", "failed to accept invitation ${invite.groupId}!")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to decline an invitation: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -411,12 +474,20 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "leaving group ${group.id}")
         viewModelScope.launch {
-            val response = groupService.leaveGroup(_tokenGetter(), group.id)
-            if (response.isSuccessful) {
-                onSuccess()
-                removeGroup(group)
-            } else {
-                Log.e("GroupViewModel", "failed to leave group ${group.id}!")
+            try {
+                val response = groupService.leaveGroup(_tokenGetter(), group.id)
+                if (response.isSuccessful) {
+                    onSuccess()
+                    removeGroup(group)
+                } else {
+                    Log.e("GroupViewModel", "failed to leave group ${group.id}!")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to leave group: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -438,20 +509,28 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     ) {
         Log.i("GroupViewModel", "kicking $email from group ${group.id}")
         viewModelScope.launch {
-            val response = groupService.kickFromGroup(_tokenGetter(), group.id, email)
-            if (response.isSuccessful) {
-                onSuccess()
-                _selectedGroup.value = TappGroup(
-                    group.id,
-                    group.name,
-                    group.emoji,
-                    group.owner,
-                    group.description,
-                    group.members!!.filter { g -> g.email != email },
-                    group.invites,
+            try {
+                val response = groupService.kickFromGroup(_tokenGetter(), group.id, email)
+                if (response.isSuccessful) {
+                    onSuccess()
+                    _selectedGroup.value = TappGroup(
+                        group.id,
+                        group.name,
+                        group.emoji,
+                        group.owner,
+                        group.description,
+                        group.members!!.filter { g -> g.email != email },
+                        group.invites,
+                    )
+                } else {
+                    Log.e("GroupViewModel", "failed to leave group ${group.id}!")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "GroupViewModel",
+                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
-            } else {
-                Log.e("GroupViewModel", "failed to leave group ${group.id}!")
                 onFailure()
             }
         }
@@ -467,18 +546,26 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     private fun create(new: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "creating group ${new.name}")
         viewModelScope.launch {
-            val response = groupService.createGroup(_tokenGetter(), new)
-            if (response.isSuccessful) {
-                Log.i(
-                    "GroupViewModel",
-                    "successfully created group ${new.id}: ${new.name}"
-                )
-                _groups.value = _groups.value + response.body()!!
-                onSuccess()
-            } else {
+            try {
+                val response = groupService.createGroup(_tokenGetter(), new)
+                if (response.isSuccessful) {
+                    Log.i(
+                        "GroupViewModel",
+                        "successfully created group ${new.id}: ${new.name}"
+                    )
+                    _groups.value = _groups.value + response.body()!!
+                    onSuccess()
+                } else {
+                    Log.e(
+                        "GroupViewModel",
+                        "failed to create group ${new.id}: ${new.name}"
+                    )
+                    onFailure()
+                }
+            } catch (e: Exception) {
                 Log.e(
                     "GroupViewModel",
-                    "failed to create group ${new.id}: ${new.name}"
+                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
                 onFailure()
             }
@@ -495,19 +582,27 @@ class TappGroupViewModel(private val application: Application) : AndroidViewMode
     private fun update(updatedTappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "updating group ${updatedTappGroup.id}: ${updatedTappGroup.name}")
         viewModelScope.launch {
-            val response =
-                groupService.updateGroup(_tokenGetter(), updatedTappGroup.id, updatedTappGroup)
-            if (response.isSuccessful) {
-                Log.i(
-                    "GroupViewModel",
-                    "successfully updated group ${updatedTappGroup.id}: ${updatedTappGroup.name}"
-                )
-                _selectedGroup.value = updatedTappGroup
-                onSuccess()
-            } else {
+            try {
+                val response =
+                    groupService.updateGroup(_tokenGetter(), updatedTappGroup.id, updatedTappGroup)
+                if (response.isSuccessful) {
+                    Log.i(
+                        "GroupViewModel",
+                        "successfully updated group ${updatedTappGroup.id}: ${updatedTappGroup.name}"
+                    )
+                    _selectedGroup.value = updatedTappGroup
+                    onSuccess()
+                } else {
+                    Log.e(
+                        "GroupViewModel",
+                        "failed to update group ${updatedTappGroup.id}: ${updatedTappGroup.name}"
+                    )
+                    onFailure()
+                }
+            } catch (e: Exception) {
                 Log.e(
                     "GroupViewModel",
-                    "failed to update group ${updatedTappGroup.id}: ${updatedTappGroup.name}"
+                    "caught exception trying to tapp: ${e.toString()}. This is most likely a rate issue since the DB is slow."
                 )
                 onFailure()
             }

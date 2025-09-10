@@ -140,7 +140,7 @@ class TappNotificationService : FirebaseMessagingService() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setAutoCancel(true)
 
-        // Only make the noficiation clickable when Tapp is not in the foreground.
+        // Only make the notification clickable when Tapp is not in the foreground.
         if (!Tapplication.isInForeground) {
             val intent = Intent(this, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(

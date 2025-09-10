@@ -10,10 +10,15 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
+/*
+An important note for API implementors. Each API call MUST be handled in a try/catch to prevent crashes!
+Connections will be re-tried, but timeouts will lead to exceptions.
+*/
 
 // Used to override defaults, sets more sane defaults for timeouts and retry policy.
 val okHttpClient = OkHttpClient.Builder()
     .connectTimeout(5, TimeUnit.SECONDS)
+    // Anything over 5 is probably related to an error or congestion.
     .readTimeout(5, TimeUnit.SECONDS)
     .writeTimeout(5, TimeUnit.SECONDS)
     .retryOnConnectionFailure(true)

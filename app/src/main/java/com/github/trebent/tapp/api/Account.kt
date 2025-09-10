@@ -20,6 +20,11 @@ import retrofit2.http.Path
  * created. It is only here to help align object usage across Tapp.
  */
 data class Account(val email: String, val password: String, val tag: String?) {
+    /**
+     * User identifier utility, will utilise the tag if present, otherwise the email.
+     *
+     * @return tag or email
+     */
     fun userIdentifier(): String {
         if (tag != null && tag != "") {
             return tag

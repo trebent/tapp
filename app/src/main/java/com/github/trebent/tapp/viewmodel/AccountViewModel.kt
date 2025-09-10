@@ -94,6 +94,7 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
                         Account(_account.value.email, "", response.body()!!.tag)
                 }
 
+                // Since user is logged in, start reporting FCM to cloud.
                 reportFCM()
             }
 
@@ -180,12 +181,20 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
         }
 
         viewModelScope.launch {
-            val response = accountService.createAccount(Account(email, password, t))
-            if (response.isSuccessful) {
-                // no need to set the account body, credentials are provided on login, in fact it
-                // would be confusing to set it here.
-                onSuccess()
-            } else {
+            try {
+                val response = accountService.createAccount(Account(email, password, t))
+                if (response.isSuccessful) {
+                    // no need to set the account body, credentials are provided on login, in fact it
+                    // would be confusing to set it here.
+                    onSuccess()
+                } else {
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to sign up: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -210,31 +219,43 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
         onFailure: () -> Unit
     ) {
         viewModelScope.launch {
-            val response = accountService.login(LoginRequest(email, password))
-            if (response.isSuccessful) {
-                _loginState.value = true
-                val newToken = response.headers()["Authorization"]
-                if (newToken == null) {
-                    Log.i("AccountViewModel", "unable to find authorization token")
-                    onFailure()
+            try {
+                val response = accountService.login(LoginRequest(email, password))
+                if (response.isSuccessful) {
+                    _loginState.value = true
+                    val newToken = response.headers()["Authorization"]
+                    if (newToken == null) {
+                        Log.i("AccountViewModel", "unable to find authorization token")
+                        onFailure()
+                    } else {
+                        application.dataStore.edit { preferences ->
+                            preferences[tokenkey] = newToken
+                            preferences[emailkey] = email
+                        }
+
+                        onSuccess()
+
+                        val response = accountService.getAccount(_token.value, _account.value.email)
+                        if (response.isSuccessful) {
+                            Log.i(
+                                "AccountViewModel",
+                                "successfully fetched account ${response.body()}"
+                            )
+                            _account.value =
+                                Account(_account.value.email, "", response.body()!!.tag)
+                        }
+
+                        // Report FCM immediately now that the device is eligible to receive notifications.
+                        reportFCM()
+                    }
                 } else {
-                    application.dataStore.edit { preferences ->
-                        preferences[tokenkey] = newToken
-                        preferences[emailkey] = email
-                    }
-
-                    onSuccess()
-
-                    val response = accountService.getAccount(_token.value, _account.value.email)
-                    if (response.isSuccessful) {
-                        Log.i("AccountViewModel", "successfully fetched account ${response.body()}")
-                        _account.value =
-                            Account(_account.value.email, "", response.body()!!.tag)
-                    }
-
-                    reportFCM()
+                    onFailure()
                 }
-            } else {
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to log in: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -250,21 +271,27 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
      */
     fun logout(onDone: () -> Unit) {
         Log.i("AccountViewModel", "logout")
-
         viewModelScope.launch {
-            val response = accountService.logout(_token.value)
-
+            // Prioritize clearing local credentials and state, backend sync is a second priority.
             _loginState.value = false
 
             application.dataStore.edit { preferences ->
                 preferences.remove(tokenkey)
                 preferences.remove(emailkey)
             }
-
-            if (!response.isSuccessful) {
-                Log.i("AccountViewModel", "logout call failed!")
-            }
             onDone()
+
+            try {
+                val response = accountService.logout(_token.value)
+                if (!response.isSuccessful) {
+                    Log.i("AccountViewModel", "logout call failed!")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to log out: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
+            }
         }
     }
 
@@ -279,18 +306,26 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
         Log.i("AccountViewModel", "updating tag to $tag")
 
         viewModelScope.launch {
-            val response = accountService.updateAccount(
-                _token.value,
-                _account.value.email,
-                Account(_account.value.email, "", tag)
-            )
-            if (response.isSuccessful) {
-                Log.i("AccountViewModel", "account tag update succeeded")
-                _account.value =
+            try {
+                val response = accountService.updateAccount(
+                    _token.value,
+                    _account.value.email,
                     Account(_account.value.email, "", tag)
-                onSuccess()
-            } else {
-                Log.e("AccountViewModel", "account update call failed")
+                )
+                if (response.isSuccessful) {
+                    Log.i("AccountViewModel", "account tag update succeeded")
+                    _account.value =
+                        Account(_account.value.email, "", tag)
+                    onSuccess()
+                } else {
+                    Log.e("AccountViewModel", "account update call failed")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to update tag: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -306,13 +341,21 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
     fun updatePassword(password: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "updating password")
         viewModelScope.launch {
-            val response =
-                accountService.updatePassword(_token.value, ChangePasswordRequest(password))
-            if (response.isSuccessful) {
-                Log.i("AccountViewModel", "successfully updated the password!")
-                onSuccess()
-            } else {
-                Log.i("AccountViewModel", "failed to update the password")
+            try {
+                val response =
+                    accountService.updatePassword(_token.value, ChangePasswordRequest(password))
+                if (response.isSuccessful) {
+                    Log.i("AccountViewModel", "successfully updated the password!")
+                    onSuccess()
+                } else {
+                    Log.i("AccountViewModel", "failed to update the password")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to update password: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
                 onFailure()
             }
         }
@@ -327,14 +370,21 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
     fun deleteAccount(onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("AccountViewModel", "deleting account ${_account.value.email}")
         viewModelScope.launch {
-            val response =
-                accountService.deleteAccount(_token.value, _account.value.email)
-            if (response.isSuccessful) {
-                Log.i("AccountViewModel", "successfully deleted the account!")
-                logout { onSuccess() }
-            } else {
-                Log.e("AccountViewModel", "failed to delete the account")
-                onFailure()
+            try {
+                val response =
+                    accountService.deleteAccount(_token.value, _account.value.email)
+                if (response.isSuccessful) {
+                    Log.i("AccountViewModel", "successfully deleted the account!")
+                    logout { onSuccess() }
+                } else {
+                    Log.e("AccountViewModel", "failed to delete the account")
+                    onFailure()
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "AccountViewModel",
+                    "caught exception trying to delete account: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                )
             }
         }
     }
@@ -356,11 +406,18 @@ class AccountViewModel(private val application: Application) : AndroidViewModel(
 
             // Send token to backend
             viewModelScope.launch {
-                val response = accountService.pushFCM(token, _token.value)
-                if (response.isSuccessful) {
-                    Log.i("AccountViewModel", "sent FCM successfully")
-                } else {
-                    Log.e("AccountViewModel", "failed to report FCM to cloud backend")
+                try {
+                    val response = accountService.pushFCM(token, _token.value)
+                    if (response.isSuccessful) {
+                        Log.i("AccountViewModel", "sent FCM successfully")
+                    } else {
+                        Log.e("AccountViewModel", "failed to report FCM to cloud backend")
+                    }
+                } catch (e: Exception) {
+                    Log.e(
+                        "AccountViewModel",
+                        "caught exception trying to update FCM: ${e.toString()}. This is most likely a rate issue since the DB is slow."
+                    )
                 }
             }
         }
