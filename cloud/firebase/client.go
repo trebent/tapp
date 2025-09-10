@@ -142,6 +142,7 @@ func SendMulticast(n *TappNotification) {
 			"body":       n.Body,
 			"sender":     n.Account.Email,
 			"sender_tag": n.Account.Tag,
+			"type":       n.Type,
 			"time":       strconv.Itoa(int(n.Time)),
 			"group_id":   strconv.Itoa(n.Group.ID),
 		},
