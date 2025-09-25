@@ -526,8 +526,16 @@ func handleGroupLeave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go firebase.SendMulticast(&firebase.TappNotification{
-		Title:   fmt.Sprintf("%s has left the group %s!", leavingAccount.UserIdentifier(), existingGroup.Name),
-		Body:    fmt.Sprintf("%s has decided to leave the group %s!", leavingAccount.UserIdentifier(), existingGroup.Name),
+		Title: fmt.Sprintf(
+			"%s has left the group %s!",
+			leavingAccount.UserIdentifier(),
+			existingGroup.Name,
+		),
+		Body: fmt.Sprintf(
+			"%s has decided to leave the group %s!",
+			leavingAccount.UserIdentifier(),
+			existingGroup.Name,
+		),
 		Time:    time.Now().UnixMilli(),
 		Group:   existingGroup,
 		Account: leavingAccount,
