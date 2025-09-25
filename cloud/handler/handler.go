@@ -41,15 +41,19 @@ func Handler() http.Handler {
 
 		summary := struct {
 			Accounts         []*model.Account         `json:"accounts"`
-			Groups           *model.Group             `json:"groups"`
+			Groups           []*model.Group           `json:"groups"`
 			TappsByGroupName map[string][]*model.Tapp `json:"tapps_by_group_name"`
 			Invites          []*model.Invitation      `json:"invitations"`
-		}{}
+		}{
+			TappsByGroupName: map[string][]*model.Tapp{},
+		}
 
 		accounts, _ := db.ReadAll[*model.Account]()
 		summary.Accounts = accounts
 
 		groups, _ := db.ReadAll[*model.Group]()
+		summary.Groups = groups
+
 		for _, group := range groups {
 			tapps, _ := db.SimpleRead(&model.Tapp{GroupID: group.ID})
 			summary.TappsByGroupName[group.Name] = tapps

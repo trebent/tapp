@@ -17,10 +17,10 @@ Connections will be re-tried, but timeouts will lead to exceptions.
 
 // Used to override defaults, sets more sane defaults for timeouts and retry policy.
 val okHttpClient = OkHttpClient.Builder()
-    .connectTimeout(5, TimeUnit.SECONDS)
-    // Anything over 5 is probably related to an error or congestion.
-    .readTimeout(5, TimeUnit.SECONDS)
-    .writeTimeout(5, TimeUnit.SECONDS)
+    .connectTimeout(15, TimeUnit.SECONDS)
+    // Anything over 15 is probably related to an error or congestion.
+    .readTimeout(15, TimeUnit.SECONDS)
+    .writeTimeout(15, TimeUnit.SECONDS)
     .retryOnConnectionFailure(true)
     .build()
 
