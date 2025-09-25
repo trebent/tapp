@@ -103,7 +103,7 @@ fun TappGroupScreenRoute(
     }
 
     LaunchedEffect(Unit) {
-        Log.i("TappGroupScreenRoute", "registering shake detector")
+        Log.i("TappGroupScreenRoute", "collecting shake events")
 
         shakeViewModel.shakeEvents.collect {
             onTapp()

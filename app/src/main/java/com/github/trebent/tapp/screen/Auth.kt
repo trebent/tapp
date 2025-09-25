@@ -160,7 +160,7 @@ fun SignupScreen(
                     onValueChange = { v: String ->
                         emailError = false
                         email = v
-                        Log.i("LoginScreen", "entered text in email field: $email")
+                        Log.i("LoginScreen", "entered text in email field")
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Next,
@@ -329,7 +329,7 @@ fun LoginScreen(
                         email = v
                         emailError = false
                         loginError = false
-                        Log.i("LoginScreen", "entered text in email field: $email")
+                        Log.i("LoginScreen", "entered text in email field")
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Next,
