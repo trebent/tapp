@@ -612,8 +612,16 @@ func handleGroupKick(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go firebase.SendMulticast(&firebase.TappNotification{
-		Title:   fmt.Sprintf("%s has been kicked from the group %s!", kickedAccount.UserIdentifier(), existingGroup.Name),
-		Body:    fmt.Sprintf("%s has been kicked from the group %s!", kickedAccount.UserIdentifier(), existingGroup.Name),
+		Title: fmt.Sprintf(
+			"%s has been kicked from the group %s!",
+			kickedAccount.UserIdentifier(),
+			existingGroup.Name,
+		),
+		Body: fmt.Sprintf(
+			"%s has been kicked from the group %s!",
+			kickedAccount.UserIdentifier(),
+			existingGroup.Name,
+		),
 		Time:    time.Now().UnixMilli(),
 		Group:   existingGroup,
 		Account: &model.Account{Email: email},
