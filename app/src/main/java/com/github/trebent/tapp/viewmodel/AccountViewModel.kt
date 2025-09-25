@@ -87,26 +87,35 @@ class AccountViewModel(
             }
 
             if (_token.value != "") {
-                _loginState.value = true
-            }
-
-            if (_loginState.value) {
                 val response = accountService.getAccount(_token.value, _account.value.email)
                 if (response.isSuccessful) {
-                    Log.i("AccountViewModel", "successfully fetched account ${response.body()}")
+                    Log.i("AccountViewModel", "successfully fetched account")
                     _account.value =
                         Account(_account.value.email, "", response.body()!!.tag)
-                }
 
-                // Since user is logged in, start reporting FCM to cloud.
-                reportFCM()
+                    // Now that it's been confirmed the user is logged in, set login state.
+                    _loginState.value = true
+
+                    // Since user is logged in, start reporting FCM to cloud.
+                    reportFCM()
+                } else if (response.code() == 401) {
+                    Log.e(
+                        "AccountViewModel", "token was invalid, unable to fetch account, " +
+                                "resetting preferences"
+                    )
+
+                    application.dataStore.edit { preferences ->
+                        preferences.remove(tokenkey)
+                        preferences.remove(emailkey)
+                    }
+                }
             }
 
             Log.i("AccountViewModel", "initialised account view model")
             _i.value = true
 
             application.dataStore.data.collect { preferences ->
-                Log.i("AccountViewModel", "preferences $preferences")
+                Log.i("AccountViewModel", "processing preference update")
 
                 val email = preferences[emailkey]
                 if (email != null) {
@@ -122,8 +131,7 @@ class AccountViewModel(
                     _token.value = ""
                 }
 
-                Log.i("AccountViewModel", "preferences updated token ${_token.value}")
-                Log.i("AccountViewModel", "preferences updated account ${_account.value}")
+                Log.i("AccountViewModel", "preferences updated")
             }
         }
     }
@@ -149,7 +157,7 @@ class AccountViewModel(
                 if (response.isSuccessful) {
                     _account.value =
                         Account(_account.value.email, "", response.body()?.tag)
-                    Log.i("AccountViewModel", "fetched account successfully ${_account.value}")
+                    Log.i("AccountViewModel", "fetched account successfully")
                 } else {
                     Log.e("AccountViewModel", "failed to fetch account")
                 }
@@ -180,10 +188,7 @@ class AccountViewModel(
         onSuccess: () -> Unit,
         onFailure: () -> Unit
     ) {
-        Log.i(
-            "AccountViewModel",
-            "signup tag: $tag, email: $email, password length: ${password.length}"
-        )
+        Log.i("AccountViewModel", "signup called")
 
         val t = if (tag == "") {
             null
@@ -233,12 +238,14 @@ class AccountViewModel(
             try {
                 val response = accountService.login(LoginRequest(email, password))
                 if (response.isSuccessful) {
-                    _loginState.value = true
                     val newToken = response.headers()["Authorization"]
                     if (newToken == null) {
-                        Log.i("AccountViewModel", "unable to find authorization token")
+                        Log.e("AccountViewModel", "unable to find authorization token")
                         onFailure()
                     } else {
+                        Log.i("AccountViewModel", "successfully logged in")
+
+                        _loginState.value = true
                         application.dataStore.edit { preferences ->
                             preferences[tokenkey] = newToken
                             preferences[emailkey] = email
@@ -250,7 +257,7 @@ class AccountViewModel(
                         if (response.isSuccessful) {
                             Log.i(
                                 "AccountViewModel",
-                                "successfully fetched account ${response.body()}"
+                                "successfully fetched account"
                             )
                             _account.value =
                                 Account(_account.value.email, "", response.body()!!.tag)
@@ -379,7 +386,7 @@ class AccountViewModel(
      * @param onFailure callback
      */
     fun deleteAccount(onSuccess: () -> Unit, onFailure: () -> Unit) {
-        Log.i("AccountViewModel", "deleting account ${_account.value.email}")
+        Log.i("AccountViewModel", "deleting account")
         viewModelScope.launch {
             try {
                 val response =
@@ -409,7 +416,7 @@ class AccountViewModel(
         Log.i("AccountViewModel", "Fetching FCM token and notifying backend...")
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                Log.w("FCM", "Fetching FCM token failed", task.exception)
+                Log.w("AccountViewModel", "Fetching FCM token failed", task.exception)
                 return@addOnCompleteListener
             }
 
