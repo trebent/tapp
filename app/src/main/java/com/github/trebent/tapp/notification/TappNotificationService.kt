@@ -36,6 +36,13 @@ object TappNotificationEvents {
 const val NOTIFICATION_GROUP_KEY = "com.github.trebent.tapp"
 const val CHANNEL_ID = "tapp_channel"
 
+
+/**
+ * Tapp notification service, handles reporting updated FCMs to the Tapp backend, and processes
+ * all incoming notifications.
+ *
+ * @constructor Create empty Tapp notification service
+ */
 class TappNotificationService : FirebaseMessagingService() {
 
     /**
@@ -48,6 +55,8 @@ class TappNotificationService : FirebaseMessagingService() {
      *  - The Tapp event update depends on if the application is in the foreground, since the only
      *    side-effects of an event-dispatch is that the Tapp is added to the tapp group view model
      *    list of tapps.
+     *
+     * @param remoteMessage to process, as received from Firebase
      */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
@@ -109,6 +118,8 @@ class TappNotificationService : FirebaseMessagingService() {
     /**
      * Update the Tapp backend with the device FCM. Each FCM is used to map which device should
      * receive a notification. The FCM is mapped to one or more group IDs in the Tapp backend.
+     *
+     * @param newToken to report to the Tapp backend
      */
     override fun onNewToken(newToken: String) {
         super.onNewToken(newToken)
@@ -140,6 +151,8 @@ class TappNotificationService : FirebaseMessagingService() {
 
     /**
      * Show a notification on screen. This is called from the message receiver.
+     * @param title of the notification
+     * @param message of the notification
      */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(title: String, message: String) {

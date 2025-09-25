@@ -394,8 +394,14 @@ func handleGroupJoin(w http.ResponseWriter, r *http.Request) {
 	)
 
 	go firebase.SendMulticast(&firebase.TappNotification{
-		Title:   fmt.Sprintf("%s has joined the group %s!", invitedAccount.UserIdentifier(), existingGroup.Name),
-		Body:    fmt.Sprintf("%s has accepted the invitation to join the group %s!", invitedAccount.UserIdentifier(), existingGroup.Name),
+		Title: fmt.Sprintf(
+			"%s has joined the group %s!", invitedAccount.UserIdentifier(), existingGroup.Name,
+		),
+		Body: fmt.Sprintf(
+			"%s has accepted the invitation to join the group %s!",
+			invitedAccount.UserIdentifier(),
+			existingGroup.Name,
+		),
 		Time:    time.Now().UnixMilli(),
 		Group:   existingGroup,
 		Account: invitedAccount,
