@@ -632,7 +632,7 @@ fun InviteToGroupContent(onConfirm: (user: String) -> Unit, onCancel: () -> Unit
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Enter the tag or email of the user to invite:")
+            Text("Enter the email of the user to invite:")
         }
         Row(
             modifier = Modifier
@@ -641,8 +641,8 @@ fun InviteToGroupContent(onConfirm: (user: String) -> Unit, onCancel: () -> Unit
         ) {
             TextField(
                 value = user,
-                label = { Text("User tag or email") },
-                placeholder = { Text("Enter tag or email") },
+                label = { Text("User email") },
+                placeholder = { Text("Enter email") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Person,
