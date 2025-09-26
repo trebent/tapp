@@ -87,6 +87,9 @@ func SimpleAppend[T Simple](entity T) error {
 func SimpleClear[T Simple](e T) error {
 	simpleLogger.Info("clearing table", "table", getSimpleTableName(e))
 	if err := os.Remove(getSimpleTablePath(e)); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 	return nil
