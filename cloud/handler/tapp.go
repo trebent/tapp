@@ -120,9 +120,9 @@ func handleTappGet(w http.ResponseWriter, r *http.Request) {
 	})
 
 	//nolint:mnd
-	if len(tapps) > 100 {
+	if len(tapps) > 50 {
 		//nolint:mnd
-		tapps = tapps[:100]
+		tapps = tapps[:50]
 	}
 	tapps = slices.DeleteFunc(tapps, func(t *model.Tapp) bool { return t.GroupID != group.ID })
 
