@@ -112,6 +112,7 @@ fun Main(
     shakeViewModel: ShakeViewModel
 ) {
     Log.i("Main", "main compose entrypoint")
+
     val navController = rememberNavController()
 
     // navigation actions, to keep track of navController calls and keep a central way of controlling

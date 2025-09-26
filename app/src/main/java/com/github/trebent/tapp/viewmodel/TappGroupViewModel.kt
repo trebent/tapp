@@ -199,6 +199,8 @@ class TappGroupViewModel(
      * @return the tapp state flow
      */
     fun listTapps(): StateFlow<List<Tapp>> {
+        _tapps.value = emptyList()
+
         Log.i("GroupViewModel", "listing tapps for group ${selectedGroup.value.id}")
         viewModelScope.launch {
             try {
