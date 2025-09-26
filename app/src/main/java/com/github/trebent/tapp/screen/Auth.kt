@@ -89,7 +89,7 @@ fun SignupScreen(
     var password by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    var tagError by rememberSaveable { mutableStateOf(false) }
+    var apiError by rememberSaveable { mutableStateOf(false) }
     var emailError by rememberSaveable { mutableStateOf(false) }
     var passwordError by rememberSaveable { mutableStateOf(false) }
 
@@ -115,9 +115,9 @@ fun SignupScreen(
                             contentDescription = "",
                         )
                     },
-                    isError = tagError,
+                    isError = apiError,
                     onValueChange = { v: String ->
-                        tagError = false
+                        apiError = false
                         tag = v
                         Log.i("LoginScreen", "entered text in tag field: $tag")
                     },
@@ -127,16 +127,6 @@ fun SignupScreen(
                     ),
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-            }
-            if (tagError) {
-                item(span = { GridItemSpan(4) }) {
-                    Text(
-                        text = "tag is already taken",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
             }
             item(span = { GridItemSpan(4) }) {
                 Text(
@@ -156,9 +146,10 @@ fun SignupScreen(
                             contentDescription = "",
                         )
                     },
-                    isError = emailError,
+                    isError = emailError || apiError,
                     onValueChange = { v: String ->
                         emailError = false
+                        apiError = false
                         email = v
                         Log.i("LoginScreen", "entered text in email field")
                     },
@@ -229,6 +220,16 @@ fun SignupScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
+            if (apiError) {
+                item(span = { GridItemSpan(4) }) {
+                    Text(
+                        text = "email address or tag is already taken",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
             item(span = { GridItemSpan(4) }) {
                 Button(shape = RoundedCornerShape(8.dp), onClick = {
                     Log.i("SignupScreen", "clicked signup button")
@@ -244,6 +245,7 @@ fun SignupScreen(
                             Log.i("SignupScreen", "signup succeeded")
                         }, {
                             Log.e("SignupScreen", "signup call failed")
+                            apiError = true
                         })
                     }
                 }) {
