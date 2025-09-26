@@ -265,12 +265,12 @@ fun EditTappGroupScreen(
                             saveGroup(
                                 updatedGroup, {
                                     Log.i("EditTappGroupScreen", "successfully saved the group")
+                                    goBack()
                                 }, {
                                     Log.e("EditTappGroupScreen", "failed to save the group")
                                     nameError = true
                                 }
                             )
-                            goBack()
                         }
                     }
                 ) {
@@ -284,6 +284,7 @@ fun EditTappGroupScreen(
         ConfirmTappGroupDeleteDialog({
             deleteGroup(selectedGroup.value, {
                 Log.i("EditTappGroupScreen", "successfully deleted the group")
+                goBackHome()
             }, {
                 Log.e("EditTappGroupScreen", "failed to delete the group")
                 Toast.makeText(
@@ -292,7 +293,6 @@ fun EditTappGroupScreen(
                     Toast.LENGTH_SHORT
                 ).show()
             })
-            goBackHome()
         }, { showDeleteGroupDialog = false })
     }
 

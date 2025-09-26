@@ -11,6 +11,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import com.github.trebent.tapp.notification.CHANNEL_ID
 
 
@@ -24,6 +25,9 @@ import com.github.trebent.tapp.notification.CHANNEL_ID
 class Tapplication : Application(), ActivityLifecycleCallbacks {
     override fun onCreate() {
         super.onCreate()
+
+        Log.i("Tapplication", "creating")
+
         registerActivityLifecycleCallbacks(this)
 
         val notificationManager =
@@ -33,7 +37,7 @@ class Tapplication : Application(), ActivityLifecycleCallbacks {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Tapp",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }

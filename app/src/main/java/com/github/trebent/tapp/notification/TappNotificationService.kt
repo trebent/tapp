@@ -58,61 +58,64 @@ class TappNotificationService : FirebaseMessagingService() {
      *
      * @param remoteMessage to process, as received from Firebase
      */
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
         Log.d("TappNotificationService", "Message received")
-        if (!remoteMessage.data.isEmpty()) {
-            val title: String
-            val body: String
-            val sender: String
-            val senderTag: String
-            val time: String
-            val groupId: String
-
-            // non-null when receiving targetted notifications, meaning they should be displayed
-            // no matter the sender.
-            val individual: String?
-            val type: String
-
-            remoteMessage.data.let { data ->
-                title = data["title"]!!
-                body = data["body"]!!
-                sender = data["sender"]!!
-                senderTag = data["sender_tag"]!!
-                time = data["time"]!!
-                groupId = data["group_id"]!!
-                individual = data["individual"]
-                type = data["type"]!!
-            }
-
-            val email = runBlocking {
-                applicationContext.dataStore.data.first()[emailkey]
-            }
-
-            // Determine noop, if I am the sender, I don't need a notification.
-            if (individual == null && email == sender) {
-                Log.d("TappNotificationService", "Sender is me, discarding")
-                return
-            }
-
-            if (type == "tapp") {
-                CoroutineScope(Dispatchers.Default).launch {
-                    TappNotificationEvents.events.emit(
-                        Tapp(
-                            groupId.toInt(),
-                            time.toLong(),
-                            // A Tapp has a companion object that will determine if the email or tag
-                            // is to be used for the tapp listing. The tag will be preferred if it
-                            // exists.
-                            Account(sender, "", senderTag)
-                        )
-                    )
-                }
-            }
-
-            showNotification(title, body)
+        if (remoteMessage.data.isEmpty()) {
+            return
         }
+
+        val title: String
+        val body: String
+        val sender: String
+        val senderTag: String
+        val time: String
+        val groupId: String
+
+        // non-null when receiving targetted notifications, meaning they should be displayed
+        // no matter the sender.
+        val individual: String?
+        val type: String
+
+        remoteMessage.data.let { data ->
+            title = data["title"]!!
+            body = data["body"]!!
+            sender = data["sender"]!!
+            senderTag = data["sender_tag"]!!
+            time = data["time"]!!
+            groupId = data["group_id"]!!
+            individual = data["individual"]
+            type = data["type"]!!
+        }
+
+        val email = runBlocking {
+            applicationContext.dataStore.data.first()[emailkey]
+        }
+
+        // Determine noop, if I am the sender, I don't need a notification.
+        if (individual == null && email == sender) {
+            Log.d("TappNotificationService", "Sender is me, discarding")
+            return
+        }
+
+        if (type == "tapp") {
+            CoroutineScope(Dispatchers.Default).launch {
+                TappNotificationEvents.events.emit(
+                    Tapp(
+                        groupId.toInt(),
+                        time.toLong(),
+                        // A Tapp has a companion object that will determine if the email or tag
+                        // is to be used for the tapp listing. The tag will be preferred if it
+                        // exists.
+                        Account(sender, "", senderTag)
+                    )
+                )
+            }
+        }
+
+        showNotification(title, body)
     }
 
     /**
@@ -156,6 +159,8 @@ class TappNotificationService : FirebaseMessagingService() {
      */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(title: String, message: String) {
+        Log.d("TappNotificationService", "showing notification")
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setGroup(NOTIFICATION_GROUP_KEY)
             .setContentTitle(title)
