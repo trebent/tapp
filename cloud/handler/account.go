@@ -149,6 +149,8 @@ func handleAccountUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	updatedAccount.Password = ""
+
 	//nolint:gosec,govet
 	if err := model.WriteJSON(w, updatedAccount); err != nil {
 		zerologr.Error(err, "failed to serialize account")
