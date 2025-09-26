@@ -118,7 +118,14 @@ fun Main(
     // navigation actions, to keep track of navController calls and keep a central way of controlling
     // the way the user is allowed to navigate. Popping the nav stack is done here too, to not allow
     // confusing backtracking to signup, login, home and such.
-    val goBack: () -> Unit = { navController.popBackStack() }
+    val goBack: () -> Unit = {
+        if (navController.previousBackStackEntry != null) {
+            val popped = navController.popBackStack()
+            Log.i("Main", "popped from navcontroller: $popped")
+        } else {
+            Log.i("Main", "at root, ignore")
+        }
+    }
     val goBackHome: () -> Unit =
         { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
     val goToLogin: () -> Unit =

@@ -265,13 +265,12 @@ fun EditTappGroupScreen(
                             saveGroup(
                                 updatedGroup, {
                                     Log.i("EditTappGroupScreen", "successfully saved the group")
-                                    goBack()
                                 }, {
                                     Log.e("EditTappGroupScreen", "failed to save the group")
                                     nameError = true
                                 }
                             )
-
+                            goBack()
                         }
                     }
                 ) {
