@@ -115,6 +115,10 @@ func handleTappGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slices.SortFunc(tapps, func(a, b *model.Tapp) int {
+		return int(b.Time - a.Time)
+	})
+
 	//nolint:mnd
 	if len(tapps) > 100 {
 		//nolint:mnd
