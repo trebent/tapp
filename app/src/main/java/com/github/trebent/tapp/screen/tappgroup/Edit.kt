@@ -285,7 +285,6 @@ fun EditTappGroupScreen(
         ConfirmTappGroupDeleteDialog({
             deleteGroup(selectedGroup.value, {
                 Log.i("EditTappGroupScreen", "successfully deleted the group")
-                goBackHome()
             }, {
                 Log.e("EditTappGroupScreen", "failed to delete the group")
                 Toast.makeText(
@@ -294,7 +293,7 @@ fun EditTappGroupScreen(
                     Toast.LENGTH_SHORT
                 ).show()
             })
-            showDeleteGroupDialog = false
+            goBackHome()
         }, { showDeleteGroupDialog = false })
     }
 

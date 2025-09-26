@@ -298,6 +298,9 @@ class TappGroupViewModel(
      */
     fun delete(tappGroup: TappGroup, onSuccess: () -> Unit, onFailure: () -> Unit) {
         Log.i("GroupViewModel", "deleting group ${tappGroup.id}: ${tappGroup.name}")
+
+        _groups.value = _groups.value.filter { g -> tappGroup.id != g.id }
+
         viewModelScope.launch {
             try {
                 val response = groupService.deleteGroup(_tokenGetter(), tappGroup.id)
@@ -306,6 +309,7 @@ class TappGroupViewModel(
                         "GroupViewModel",
                         "successfully deleted group ${tappGroup.id}: ${tappGroup.name}"
                     )
+
                     onSuccess()
                 } else {
                     Log.e(
