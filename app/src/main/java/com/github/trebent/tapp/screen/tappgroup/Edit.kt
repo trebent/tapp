@@ -289,7 +289,7 @@ fun EditTappGroupScreen(
                 Log.e("EditTappGroupScreen", "failed to delete the group")
                 Toast.makeText(
                     context,
-                    "Group could not be accepted, please try again.",
+                    "Group could not be deleted, please try again.",
                     Toast.LENGTH_SHORT
                 ).show()
             })
